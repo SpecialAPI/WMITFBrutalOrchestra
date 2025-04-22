@@ -44,7 +44,7 @@ namespace WMITF
             crs.Emit(OpCodes.Call, dm_ow_amn);
         }
 
-        [HarmonyPatch(typeof(InteractablePartyCharacterUILayout), nameof(InteractablePartyCharacterUILayout.SetInformation))]
+        //[HarmonyPatch(typeof(InteractablePartyCharacterUILayout), nameof(InteractablePartyCharacterUILayout.SetInformation))]
         [HarmonyPatch(typeof(PartyCharacterUILayout), nameof(PartyCharacterUILayout.SetInformation), typeof(IMinimalCharacterInfo), typeof(bool), typeof(bool), typeof(bool))]
         [HarmonyILManipulator]
         public static void DisplayMod_OverworldSetInfoMinimalCharacter_Transpiler(ILContext ctx)
