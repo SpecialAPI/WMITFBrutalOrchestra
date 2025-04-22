@@ -1,2 +1,2 @@
 # WMITFBrutalOrchestra
- A Brutal Orchestra mod that shows what mod an item, charater or enemy is from.
+ A Brutal Orchestra mod that shows what mod an item, character or enemy is from.
