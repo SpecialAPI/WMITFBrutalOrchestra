@@ -14,10 +14,12 @@ namespace WMITF
         private static readonly FieldInfo _moddedCH = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedCharacters");
         private static readonly FieldInfo _moddedEN = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedEnemies");
         private static readonly FieldInfo _moddedW = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedWearables");
+        private static readonly FieldInfo _moddedACH = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedAchievements");
 
         public static readonly Dictionary<string, PluginInfo> ModdedCharacterPlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedEnemyPlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedWearablePlugins = [];
+        public static readonly Dictionary<string, PluginInfo> ModdedAchievementPlugins = [];
 
         public static Dictionary<string, Assembly> ModdedCharacterAssemblies
         {
@@ -37,13 +39,20 @@ namespace WMITF
             set => _moddedW.SetValue(null, value);
         }
 
+        public static Dictionary<string, Assembly> ModdedAchievementAssemblies
+        {
+            get => _moddedACH.GetValue(null) as Dictionary<string, Assembly>;
+            set => _moddedACH.SetValue(null, value);
+        }
+
         public static void Init()
         {
             var pairs = new List<(Dictionary<string, Assembly> asmbls, Dictionary<string, PluginInfo> pinfos)>()
             {
-                (ModdedCharacterAssemblies  ??= [], ModdedCharacterPlugins),
-                (ModdedEnemyAssemblies      ??= [], ModdedEnemyPlugins),
-                (ModdedWearableAssemblies   ??= [], ModdedWearablePlugins)
+                (ModdedCharacterAssemblies      ??= [], ModdedCharacterPlugins),
+                (ModdedEnemyAssemblies          ??= [], ModdedEnemyPlugins),
+                (ModdedWearableAssemblies       ??= [], ModdedWearablePlugins),
+                (ModdedAchievementAssemblies    ??= [], ModdedAchievementPlugins)
             };
 
             foreach (var (asmbls, pinfos) in pairs)
@@ -102,6 +111,22 @@ namespace WMITF
             var id = wearable.name;
 
             if (string.IsNullOrEmpty(id) || !ModdedWearablePlugins.TryGetValue(id, out var plugin))
+                return false;
+
+            modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
+            return true;
+        }
+
+        public static bool TryGetAchievementModName(ModdedAchievement_t achievement, out string modName)
+        {
+            modName = string.Empty;
+
+            if (achievement == null)
+                return false;
+
+            var id = achievement.m_eAchievementID;
+
+            if (string.IsNullOrEmpty(id) || !ModdedAchievementPlugins.TryGetValue(id, out var plugin))
                 return false;
 
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);

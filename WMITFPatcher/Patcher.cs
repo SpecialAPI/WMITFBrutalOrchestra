@@ -38,13 +38,17 @@ namespace WMITFPatcher
         {
             var module = assembly.MainModule;
             var loadedAssetsHandler = module.GetType("LoadedAssetsHandler");
+            var achievementManager = module.GetType("AchievementsManagerData");
 
             var methods = new Dictionary<MethodDefinition, string>()
             {
                 [loadedAssetsHandler.FindMethod("AddExternalCharacter")]    = "WMITF_ModdedCharacters",
                 [loadedAssetsHandler.FindMethod("AddExternalEnemy")]        = "WMITF_ModdedEnemies",
-                [loadedAssetsHandler.FindMethod("TryAddExternalWearable")]  = "WMITF_ModdedWearables"
+                [loadedAssetsHandler.FindMethod("TryAddExternalWearable")]  = "WMITF_ModdedWearables",
+                [achievementManager.FindMethod("TryAddModdedAchievement")]  = "WMITF_ModdedAchievements"
             };
+
+            var registerId = AccessTools.Method(typeof(Patcher), nameof(RegisterID));
 
             foreach (var kvp in methods)
             {
@@ -57,13 +61,36 @@ namespace WMITFPatcher
                 var crs = new ILCursor(new ILContext(mthd));
                 while(crs.TryGotoNext(MoveType.After, x => x.MatchRet())) { }
                 crs.Goto(crs.Prev, MoveType.Before);
-                crs.Emit(OpCodes.Ldarg_0);
                 crs.Emit(OpCodes.Ldsflda, dictField);
-                crs.Emit(OpCodes.Call, AccessTools.Method(typeof(Patcher), nameof(RegisterID)));
+
+                if (mthd.Name == "TryAddModdedAchievement")
+                {
+                    crs.Emit(OpCodes.Ldarg_1);
+                    crs.Emit(OpCodes.Call, AccessTools.Method(typeof(Patcher), nameof(RegisterID_Achievement)));
+                }
+                else
+                {
+                    crs.Emit(OpCodes.Ldarg_0);
+                    crs.Emit(OpCodes.Call, registerId);
+                }
             }
         }
 
-        public static void RegisterID(string id, ref Dictionary<string, Assembly> dict)
+        // EXTREMELY JANK SOLUTION, need to figure out how to make this better later
+        public static void RegisterID_Achievement(ref Dictionary<string, Assembly> dict, object moddedAch)
+        {
+            if (moddedAch == null)
+                return;
+
+            var idField = AccessTools.Field(moddedAch.GetType(), "m_eAchievementID");
+
+            if(idField == null || idField.GetValue(moddedAch) is not string id)
+                return;
+
+            RegisterID(ref dict, id);
+        }
+
+        public static void RegisterID(ref Dictionary<string, Assembly> dict, string id)
         {
             var asmbl = GetPluginInfoFromStackTrace();
 
