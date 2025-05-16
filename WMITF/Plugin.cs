@@ -14,7 +14,7 @@ namespace WMITF
     {
         public const string GUID = "SpecialAPI.WMITF";
         public const string NAME = "WMITF";
-        public const string VERSION = "1.0.0";
+        public const string VERSION = "1.1.0";
 
         public void Start()
         {
