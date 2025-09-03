@@ -20,6 +20,7 @@ namespace WMITF
         {
             PluginFinder.Init();
             ModConfig.Init(Config);
+            ConsoleCommands.Init();
 
             var harmony = new Harmony(GUID);
             harmony.PatchAll();

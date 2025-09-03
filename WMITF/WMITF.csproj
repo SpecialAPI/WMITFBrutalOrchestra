@@ -18,6 +18,9 @@
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\References\BrutalOrchestra\Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="BrutalAPI">
+      <HintPath>..\..\References\BrutalOrchestra\BrutalAPI.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\..\References\Unity\Unity.TextMeshPro.dll</HintPath>
     </Reference>
