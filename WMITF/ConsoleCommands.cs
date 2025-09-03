@@ -60,6 +60,30 @@ namespace WMITF
                 else
                     DebugController.Instance.WriteLine($"{ch.GetName()} ({ch.name}) is either not modded or is not recognized by WMITF.");
             }));
+
+            group.children.Add(new DebugCommand("enemy", "Tells you what mod an enemy is from.", new()
+            {
+                new StringCommandArgument("enemyID", DebugController.EnemyAutocomplete)
+            }, x =>
+            {
+                var id = x[0].Read<string>();
+
+                if (id == null)
+                    return;
+
+                var en = LoadedAssetsHandler.GetEnemy(id);
+
+                if (en == null)
+                {
+                    DebugController.Instance.WriteLine($"Unknown enemy \"{id}\".", LogLevel.Error);
+                    return;
+                }
+
+                if (PluginFinder.ModdedEnemyPlugins.TryGetValue(en.name, out var plugin))
+                    DebugController.Instance.WriteLine($"{en.GetName()} ({en.name}) is from {plugin.Metadata.Name ?? "[null plugin name, this should not be happening]"} ({plugin.Metadata.GUID ?? "[null plugin GUID, this should not be happening"})");
+                else
+                    DebugController.Instance.WriteLine($"{en.GetName()} ({en.name}) is either not modded or is not recognized by WMITF.");
+            }));
         }
     }
 }
