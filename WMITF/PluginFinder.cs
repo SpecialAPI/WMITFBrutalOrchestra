@@ -15,11 +15,13 @@ namespace WMITF
         private static readonly FieldInfo _moddedEN = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedEnemies");
         private static readonly FieldInfo _moddedW = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedWearables");
         private static readonly FieldInfo _moddedACH = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedAchievements");
+        private static readonly FieldInfo _moddedA = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedAbilities");
 
         public static readonly Dictionary<string, PluginInfo> ModdedCharacterPlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedEnemyPlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedWearablePlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedAchievementPlugins = [];
+        public static readonly Dictionary<string, PluginInfo> ModdedAbilityPlugins = [];
 
         public static Dictionary<string, Assembly> ModdedCharacterAssemblies
         {
@@ -45,6 +47,12 @@ namespace WMITF
             set => _moddedACH.SetValue(null, value);
         }
 
+        public static Dictionary<string, Assembly> ModdedAbilityAssemblies
+        {
+            get => _moddedA.GetValue(null) as Dictionary<string, Assembly>;
+            set => _moddedA.SetValue(null, value);
+        }
+
         public static void Init()
         {
             var pairs = new List<(Dictionary<string, Assembly> asmbls, Dictionary<string, PluginInfo> pinfos)>()
@@ -52,7 +60,8 @@ namespace WMITF
                 (ModdedCharacterAssemblies      ??= [], ModdedCharacterPlugins),
                 (ModdedEnemyAssemblies          ??= [], ModdedEnemyPlugins),
                 (ModdedWearableAssemblies       ??= [], ModdedWearablePlugins),
-                (ModdedAchievementAssemblies    ??= [], ModdedAchievementPlugins)
+                (ModdedAchievementAssemblies    ??= [], ModdedAchievementPlugins),
+                (ModdedAbilityAssemblies        ??= [], ModdedAbilityPlugins)
             };
 
             foreach (var (asmbls, pinfos) in pairs)
