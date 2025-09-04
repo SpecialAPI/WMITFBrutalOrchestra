@@ -15,12 +15,14 @@ namespace WMITF
         public static ConfigEntry<bool> ShowModsForEnemiesConfig;
         public static ConfigEntry<bool> ShowModsForItemsConfig;
         public static ConfigEntry<bool> ShowModsForAchievementsConfig;
+        public static ConfigEntry<bool> ShowModsForAbilitiesConfig;
 
         public static Color ModLabelColor => ModLabelColorConfig.Value;
         public static bool ShowModsForCharacters => ShowModsForCharactersConfig.Value;
         public static bool ShowModsForEnemies => ShowModsForCharactersConfig.Value;
         public static bool ShowModsForItems => ShowModsForCharactersConfig.Value;
         public static bool ShowModsForAchievements => ShowModsForAchievementsConfig.Value;
+        public static bool ShowModsForAbilities => ShowModsForAbilitiesConfig.Value;
 
         public static void Init(ConfigFile file)
         {
@@ -31,6 +33,7 @@ namespace WMITF
             ShowModsForEnemiesConfig = file.Bind("ModDisplay", "DisplayModsForEnemies", true, "Whether or not WMITF displays mods for enemies.");
             ShowModsForItemsConfig = file.Bind("ModDisplay", "DisplayModsForItems", true, "Whether or not WMITF displays mods for items.");
             ShowModsForAchievementsConfig = file.Bind("ModDisplay", "DisplayModsForAchievements", true, "Whether or not WMITF displays mods for achievements.");
+            ShowModsForAbilitiesConfig = file.Bind("ModDisplay", "DisplayModsForAbilities", false, "Whether or not WMITF displays mods for abilities.");
         }
 
         public static string FormatModDisplay(string modName)

@@ -142,6 +142,22 @@ namespace WMITF
             return true;
         }
 
+        public static bool TryGetAbilityModName(AbilitySO ability, out string modName)
+        {
+            modName = string.Empty;
+
+            if (ability == null)
+                return false;
+
+            var id = ability.name;
+
+            if (string.IsNullOrEmpty(id) || !ModdedAbilityPlugins.TryGetValue(id, out var plugin))
+                return false;
+
+            modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
+            return true;
+        }
+
         public static PluginInfo FindPluginWithAssembly(Assembly asmbl)
         {
             if (asmbl == null)
