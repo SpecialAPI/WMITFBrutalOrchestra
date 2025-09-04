@@ -42,11 +42,14 @@ namespace WMITFPatcher
 
             var methods = new Dictionary<MethodDefinition, string>()
             {
-                [loadedAssetsHandler.FindMethod("AddExternalCharacter")]    = "WMITF_ModdedCharacters",
-                [loadedAssetsHandler.FindMethod("AddExternalEnemy")]        = "WMITF_ModdedEnemies",
-                [loadedAssetsHandler.FindMethod("TryAddExternalWearable")]  = "WMITF_ModdedWearables",
-                [achievementManager.FindMethod("TryAddModdedAchievement")]  = "WMITF_ModdedAchievements"
+                [loadedAssetsHandler.FindMethod("AddExternalCharacter")]        = "WMITF_ModdedCharacters",
+                [loadedAssetsHandler.FindMethod("AddExternalEnemy")]            = "WMITF_ModdedEnemies",
+                [loadedAssetsHandler.FindMethod("TryAddExternalWearable")]      = "WMITF_ModdedWearables",
+                [loadedAssetsHandler.FindMethod("AddExternalEnemyAbility")]     = "WMITF_ModdedAbilities",
+                [loadedAssetsHandler.FindMethod("AddExternalCharacterAbility")] = "WMITF_ModdedAbilities",
+                [achievementManager.FindMethod("TryAddModdedAchievement")]      = "WMITF_ModdedAchievements"
             };
+            var addedFields = new Dictionary<string, FieldDefinition>();
 
             var registerId = AccessTools.Method(typeof(Patcher), nameof(RegisterID));
 
@@ -55,8 +58,11 @@ namespace WMITFPatcher
                 var mthd = kvp.Key;
                 var registerDictName = kvp.Value;
 
-                var dictField = new FieldDefinition(registerDictName, FieldAttributes.Public | FieldAttributes.Static, module.ImportReference(typeof(Dictionary<string, Assembly>)));
-                loadedAssetsHandler.Fields.Add(dictField);
+                if (!addedFields.TryGetValue(registerDictName, out var dictField))
+                {
+                    dictField = new FieldDefinition(registerDictName, FieldAttributes.Public | FieldAttributes.Static, module.ImportReference(typeof(Dictionary<string, Assembly>)));
+                    loadedAssetsHandler.Fields.Add(addedFields[registerDictName] = dictField);
+                }
 
                 var crs = new ILCursor(new ILContext(mthd));
                 while(crs.TryGotoNext(MoveType.After, x => x.MatchRet())) { }
