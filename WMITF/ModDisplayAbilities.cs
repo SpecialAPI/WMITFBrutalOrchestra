@@ -12,6 +12,9 @@ namespace WMITF
     [HarmonyPatch]
     public static class ModDisplayAbilities
     {
+        public static readonly MethodInfo listCombatAbilityGetItem = AccessTools.Method(typeof(List<CombatAbility>), "get_Item");
+
+        public static readonly MethodInfo dm_sca = AccessTools.Method(typeof(ModDisplayAbilities), nameof(DisplayMod_SaveCombatAbility));
         public static readonly MethodInfo dm_amn = AccessTools.Method(typeof(ModDisplayAbilities), nameof(DisplayMod_AddModName));
 
         [HarmonyPatch(typeof(CombatVisualizationController), nameof(CombatVisualizationController.ShowcaseInfoAttackTooltip))]
@@ -20,16 +23,37 @@ namespace WMITF
         {
             var crs = new ILCursor(ctx);
 
+            var combatAbLocal = crs.DeclareLocal<CombatAbility>();
+
+            foreach(var m in crs.MatchAfter(x => x.MatchCallOrCallvirt(listCombatAbilityGetItem)))
+            {
+                crs.Emit(OpCodes.Ldloca, combatAbLocal);
+                crs.Emit(OpCodes.Call, dm_sca);
+            }
+
             if (!crs.JumpBeforeNext(x => x.MatchCallOrCallvirt<TooltipLayout>(nameof(TooltipLayout.DelayShow))))
                 return;
 
             crs.Emit(OpCodes.Ldloc_0);
+            crs.Emit(OpCodes.Ldloc, combatAbLocal);
             crs.Emit(OpCodes.Call, dm_amn);
         }
 
-        public static string DisplayMod_AddModName(string orig, AbilitySO ab)
+        public static CombatAbility DisplayMod_SaveCombatAbility(CombatAbility curr, out CombatAbility s)
         {
-            if (!ModConfig.ShowModsForAbilities)
+            return s = curr;
+        }
+
+        public static string DisplayMod_AddModName(string orig, AbilitySO ab, CombatAbility combatAb)
+        {
+            if (!(ModConfig.ShowModsForAbilities switch
+            {
+                AbilityModDisplayCondition.Off => false,
+                AbilityModDisplayCondition.OnlyForExtraAbilities => combatAb != null && combatAb.IsFromExtraAbility(),
+                AbilityModDisplayCondition.On => true,
+
+                _ => false
+            }))
                 return orig;
 
             if (orig == null || ab == null)
