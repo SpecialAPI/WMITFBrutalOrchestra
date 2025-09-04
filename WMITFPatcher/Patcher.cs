@@ -80,6 +80,10 @@ namespace WMITFPatcher
                     crs.Emit(OpCodes.Call, registerId);
                 }
             }
+
+            var combatAbility = module.GetType("CombatAbility");
+            var isExtraField = new FieldDefinition("WMITF_isExtraAbility", FieldAttributes.Public, module.ImportReference(typeof(bool)));
+            combatAbility.Fields.Add(isExtraField);
         }
 
         // EXTREMELY JANK SOLUTION, need to figure out how to make this better later
