@@ -8,6 +8,8 @@ namespace WMITF
 {
     public static class ConsoleCommands
     {
+        public static AutocompletionGroup AbilityAutocomplete = new(GetAbilityIDs);
+
         public static void Init()
         {
             var group = new DebugCommandGroup("wmitf", "The group for debug commands added by WMITF.");
@@ -84,6 +86,49 @@ namespace WMITF
                 else
                     DebugController.Instance.WriteLine($"{en.GetName()} ({en.name}) is either not modded or is not recognized by WMITF.");
             }));
+
+            group.children.Add(new DebugCommand("ability", "Tells you what mod an ability is from.", new()
+            {
+                new StringCommandArgument("abilityID", AbilityAutocomplete)
+            }, x =>
+            {
+                var id = x[0].Read<string>();
+
+                if (id == null)
+                    return;
+
+                var ab = LoadedAssetsHandler.GetEnemyAbility(id);
+                if(ab == null)
+                    ab = LoadedAssetsHandler.GetCharacterAbility(id);
+
+                if (ab == null)
+                {
+                    DebugController.Instance.WriteLine($"Unknown ability \"{id}\".", LogLevel.Error);
+                    return;
+                }
+
+                if (PluginFinder.ModdedAbilityPlugins.TryGetValue(ab.name, out var plugin))
+                    DebugController.Instance.WriteLine($"{ab.GetAbilityLocData().text} ({ab.name}) is from {plugin.Metadata.Name ?? "[null plugin name, this should not be happening]"} ({plugin.Metadata.GUID ?? "[null plugin GUID, this should not be happening"})");
+                else
+                    DebugController.Instance.WriteLine($"{ab.GetAbilityLocData().text} ({ab.name}) is either not modded or is not recognized by WMITF.");
+            }));
+        }
+
+        public static HashSet<string> GetAbilityIDs()
+        {
+            var hs = new HashSet<string>();
+
+            foreach (var a in LoadedDBsHandler.AbilityDB._characterAbilityPool)
+                hs.Add(a);
+            foreach (var a in LoadedDBsHandler.AbilityDB._enemyAbilityPool)
+                hs.Add(a);
+
+            foreach (var a in LoadedAssetsHandler.LoadedEnemyAbilities.Keys)
+                hs.Add(a);
+            foreach (var a in LoadedAssetsHandler.LoadedCharacterAbilities.Keys)
+                hs.Add(a);
+
+            return hs;
         }
     }
 }
