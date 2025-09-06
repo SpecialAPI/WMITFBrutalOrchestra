@@ -110,6 +110,30 @@ namespace WMITF
                 else
                     DebugController.Instance.WriteLine($"{ab.GetAbilityLocData().text} ({ab.name}) is either not modded or is not recognized by WMITF.");
             }));
+
+            group.children.Add(new DebugCommand("achievement", "Tells you what mod an achievement is from.", new()
+            {
+                new StringCommandArgument("abilityID", new(() => PluginFinder.ModdedAchievementPlugins.Keys))
+            }, x =>
+            {
+                var id = x[0].Read<string>();
+
+                if (id == null)
+                    return;
+
+                var ach = LoadedDBsHandler.AchievementDB.GetModdedAchievementInfo(id);
+
+                if (ach == null)
+                {
+                    DebugController.Instance.WriteLine($"Unknown achievement \"{id}\".", LogLevel.Error);
+                    return;
+                }
+
+                if (ach is ModdedAchievement_t modAch && PluginFinder.ModdedAchievementPlugins.TryGetValue(modAch.m_eAchievementID, out var plugin))
+                    DebugController.Instance.WriteLine($"{ach.GetAchLocData().text} ({modAch.m_eAchievementID}) is from {plugin.Metadata.Name ?? "[null plugin name, this should not be happening]"} ({plugin.Metadata.GUID ?? "[null plugin GUID, this should not be happening"})");
+                else
+                    DebugController.Instance.WriteLine($"{ach.GetAchLocData().text} is either not modded or is not recognized by WMITF.");
+            }));
         }
     }
 }
