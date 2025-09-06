@@ -40,6 +40,26 @@ namespace WMITF
                     pinfos[kvp.Key] = plugin;
                 }
             }
+
+            foreach(var kvp in ModAssemblyStorage.ModdedAbilitySOAssemblies)
+            {
+                var ab = kvp.Key;
+
+                if (ab == null)
+                    continue;
+
+                var name = ab.name;
+
+                if (string.IsNullOrEmpty(name) || ModdedAbilityPlugins.ContainsKey(name))
+                    continue;
+
+                var plugin = FindPluginWithAssembly(kvp.Value);
+
+                if (plugin == null)
+                    continue;
+
+                ModdedAbilityPlugins[name] = plugin;
+            }
         }
 
         public static bool TryGetCharacterModName(CharacterSO character, out string modName)

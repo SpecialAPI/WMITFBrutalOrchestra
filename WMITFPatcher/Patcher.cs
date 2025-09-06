@@ -53,6 +53,7 @@ namespace WMITFPatcher
             var module = assembly.MainModule;
             var loadedAssetsHandler = module.GetType("LoadedAssetsHandler");
             var achievementManager = module.GetType("AchievementsManagerData");
+            var abilitySO = module.GetType("AbilitySO");
 
             var assemblyStorage = wmitfModule.GetType("WMITF.ModAssemblyStorage");
 
@@ -64,6 +65,7 @@ namespace WMITFPatcher
                 [achievementManager.FindMethod("TryAddModdedAchievement")]      = ("ModdedAchievementAssemblies",   "RegisterID_Achievement"),
                 [loadedAssetsHandler.FindMethod("AddExternalEnemyAbility")]     = ("ModdedAbilityAssemblies",       "RegisterID"),
                 [loadedAssetsHandler.FindMethod("AddExternalCharacterAbility")] = ("ModdedAbilityAssemblies",       "RegisterID"),
+                [abilitySO.FindMethod(".ctor")]                                 = ("ModdedAbilitySOAssemblies",     "RegisterAbilitySO"),
             };
 
             foreach (var kvp in methods)
