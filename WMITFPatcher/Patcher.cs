@@ -9,10 +9,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using UnityEngine;
 using FieldAttributes = Mono.Cecil.FieldAttributes;
 using MethodAttributes = Mono.Cecil.MethodAttributes;
-using Debug = UnityEngine.Debug;
+using BepInEx.Logging;
+using Mono.Cecil.Rocks;
+using System.Collections;
+using System.IO;
 
 namespace WMITFPatcher
 {
@@ -20,123 +22,70 @@ namespace WMITFPatcher
     {
         public static IEnumerable<string> TargetDLLs { get; } = ["Assembly-CSharp.dll"];
 
-        public static string[] IgnoredAssemblies =
-        [
-            // basegame dll
-            "Assembly-CSharp",
+        public static ManualLogSource WLogger = Logger.CreateLogSource("WMITF Patcher");
 
-            // apis
-            "BrutalAPI",
-            "Pentacle",
+        public static bool TryLoadWMITFPluginModule(out ModuleDefinition mod)
+        {
+            var patcherDllPath = typeof(Patcher).Assembly.Location;
+            var patchersPath = Path.GetDirectoryName(patcherDllPath);
+            var wmitfRootPath = Path.GetDirectoryName(patchersPath);
+            var pluginsPath = Path.Combine(wmitfRootPath, "plugins");
+            var pluginDllPath = Path.Combine(pluginsPath, "WMITF.dll");
 
-            // wmitf itself (just in case)
-            "WMITFPatcher",
-            "WMITF"
-        ];
+            try
+            {
+                mod = ModuleDefinition.ReadModule(pluginDllPath);
+                return true;
+            }
+            catch(Exception ex)
+            {
+                mod = null;
+                WLogger.LogError($"Failed to read WMITF plugin dll: {ex}");
+                return false;
+            }
+        }
 
         public static void Patch(AssemblyDefinition assembly)
         {
+            if (!TryLoadWMITFPluginModule(out var wmitfModule))
+                return;
+
             var module = assembly.MainModule;
             var loadedAssetsHandler = module.GetType("LoadedAssetsHandler");
             var achievementManager = module.GetType("AchievementsManagerData");
 
-            var methods = new Dictionary<MethodDefinition, string>()
-            {
-                [loadedAssetsHandler.FindMethod("AddExternalCharacter")]        = "WMITF_ModdedCharacters",
-                [loadedAssetsHandler.FindMethod("AddExternalEnemy")]            = "WMITF_ModdedEnemies",
-                [loadedAssetsHandler.FindMethod("TryAddExternalWearable")]      = "WMITF_ModdedWearables",
-                [loadedAssetsHandler.FindMethod("AddExternalEnemyAbility")]     = "WMITF_ModdedAbilities",
-                [loadedAssetsHandler.FindMethod("AddExternalCharacterAbility")] = "WMITF_ModdedAbilities",
-                [achievementManager.FindMethod("TryAddModdedAchievement")]      = "WMITF_ModdedAchievements"
-            };
-            var addedFields = new Dictionary<string, FieldDefinition>();
+            var assemblyStorage = wmitfModule.GetType("WMITF.ModAssemblyStorage");
 
-            var registerId = AccessTools.Method(typeof(Patcher), nameof(RegisterID));
+            var methods = new Dictionary<MethodDefinition, (string, string)>()
+            {
+                [loadedAssetsHandler.FindMethod("AddExternalCharacter")]        = ("ModdedCharacterAssemblies",     "RegisterID"),
+                [loadedAssetsHandler.FindMethod("AddExternalEnemy")]            = ("ModdedEnemyAssemblies",         "RegisterID"),
+                [loadedAssetsHandler.FindMethod("TryAddExternalWearable")]      = ("ModdedWearableAssemblies",      "RegisterID"),
+                [achievementManager.FindMethod("TryAddModdedAchievement")]      = ("ModdedAchievementAssemblies",   "RegisterID_Achievement"),
+                [loadedAssetsHandler.FindMethod("AddExternalEnemyAbility")]     = ("ModdedAbilityAssemblies",       "RegisterID"),
+                [loadedAssetsHandler.FindMethod("AddExternalCharacterAbility")] = ("ModdedAbilityAssemblies",       "RegisterID"),
+            };
 
             foreach (var kvp in methods)
             {
                 var mthd = kvp.Key;
-                var registerDictName = kvp.Value;
+                var (dictName, registerMethodName) = kvp.Value;
 
-                if (!addedFields.TryGetValue(registerDictName, out var dictField))
-                {
-                    dictField = new FieldDefinition(registerDictName, FieldAttributes.Public | FieldAttributes.Static, module.ImportReference(typeof(Dictionary<string, Assembly>)));
-                    loadedAssetsHandler.Fields.Add(addedFields[registerDictName] = dictField);
-                }
+                var dictField = assemblyStorage.FindField(dictName);
+                var registerMethod = assemblyStorage.FindMethod(registerMethodName);
 
                 var crs = new ILCursor(new ILContext(mthd));
                 while(crs.TryGotoNext(MoveType.After, x => x.MatchRet())) { }
                 crs.Goto(crs.Prev, MoveType.Before);
-                crs.Emit(OpCodes.Ldsflda, dictField);
 
-                if (mthd.Name == "TryAddModdedAchievement")
-                {
-                    crs.Emit(OpCodes.Ldarg_1);
-                    crs.Emit(OpCodes.Call, AccessTools.Method(typeof(Patcher), nameof(RegisterID_Achievement)));
-                }
-                else
-                {
-                    crs.Emit(OpCodes.Ldarg_0);
-                    crs.Emit(OpCodes.Call, registerId);
-                }
+                crs.Emit(OpCodes.Ldsfld, module.ImportReference(dictField));
+                crs.Emit(mthd.Name == "TryAddModdedAchievement" ? OpCodes.Ldarg_1 : OpCodes.Ldarg_0);
+                crs.Emit(OpCodes.Call, module.ImportReference(registerMethod));
             }
 
             var combatAbility = module.GetType("CombatAbility");
             var isExtraField = new FieldDefinition("WMITF_isExtraAbility", FieldAttributes.Public, module.ImportReference(typeof(bool)));
             combatAbility.Fields.Add(isExtraField);
-        }
-
-        // EXTREMELY JANK SOLUTION, need to figure out how to make this better later
-        public static void RegisterID_Achievement(ref Dictionary<string, Assembly> dict, object moddedAch)
-        {
-            if (moddedAch == null)
-                return;
-
-            var idField = AccessTools.Field(moddedAch.GetType(), "m_eAchievementID");
-
-            if(idField == null || idField.GetValue(moddedAch) is not string id)
-                return;
-
-            RegisterID(ref dict, id);
-        }
-
-        public static void RegisterID(ref Dictionary<string, Assembly> dict, string id)
-        {
-            var asmbl = GetPluginInfoFromStackTrace();
-
-            if (asmbl == null)
-                return;
-
-            dict ??= [];
-            dict[id] = asmbl;
-        }
-
-        public static Assembly GetPluginInfoFromStackTrace()
-        {
-            var st = new StackTrace();
-            var frames = st.GetFrames();
-
-            foreach (var frame in frames)
-            {
-                if (frame == null)
-                    continue;
-
-                if(frame.GetMethod() is not MethodInfo mthd)
-                    continue;
-
-                if (mthd.DeclaringType is not Type decType || decType.Assembly is not Assembly asmbl)
-                    continue;
-
-                if(asmbl.GetName() is not AssemblyName asmblName || asmblName.Name is not string name)
-                    continue;
-
-                if(string.IsNullOrEmpty(name) || Array.IndexOf(IgnoredAssemblies, name) >= 0)
-                    continue;
-
-                return asmbl;
-            }
-
-            return null;
         }
     }
 }

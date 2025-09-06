@@ -11,57 +11,21 @@ namespace WMITF
 {
     public static class PluginFinder
     {
-        private static readonly FieldInfo _moddedCH = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedCharacters");
-        private static readonly FieldInfo _moddedEN = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedEnemies");
-        private static readonly FieldInfo _moddedW = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedWearables");
-        private static readonly FieldInfo _moddedACH = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedAchievements");
-        private static readonly FieldInfo _moddedA = AccessTools.Field(typeof(LoadedAssetsHandler), "WMITF_ModdedAbilities");
-
         public static readonly Dictionary<string, PluginInfo> ModdedCharacterPlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedEnemyPlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedWearablePlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedAchievementPlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedAbilityPlugins = [];
 
-        public static Dictionary<string, Assembly> ModdedCharacterAssemblies
-        {
-            get => _moddedCH.GetValue(null) as Dictionary<string, Assembly>;
-            set => _moddedCH.SetValue(null, value);
-        }
-
-        public static Dictionary<string, Assembly> ModdedEnemyAssemblies
-        {
-            get => _moddedEN.GetValue(null) as Dictionary<string, Assembly>;
-            set => _moddedEN.SetValue(null, value);
-        }
-
-        public static Dictionary<string, Assembly> ModdedWearableAssemblies
-        {
-            get => _moddedW.GetValue(null) as Dictionary<string, Assembly>;
-            set => _moddedW.SetValue(null, value);
-        }
-
-        public static Dictionary<string, Assembly> ModdedAchievementAssemblies
-        {
-            get => _moddedACH.GetValue(null) as Dictionary<string, Assembly>;
-            set => _moddedACH.SetValue(null, value);
-        }
-
-        public static Dictionary<string, Assembly> ModdedAbilityAssemblies
-        {
-            get => _moddedA.GetValue(null) as Dictionary<string, Assembly>;
-            set => _moddedA.SetValue(null, value);
-        }
-
         public static void Init()
         {
             var pairs = new List<(Dictionary<string, Assembly> asmbls, Dictionary<string, PluginInfo> pinfos)>()
             {
-                (ModdedCharacterAssemblies      ??= [], ModdedCharacterPlugins),
-                (ModdedEnemyAssemblies          ??= [], ModdedEnemyPlugins),
-                (ModdedWearableAssemblies       ??= [], ModdedWearablePlugins),
-                (ModdedAchievementAssemblies    ??= [], ModdedAchievementPlugins),
-                (ModdedAbilityAssemblies        ??= [], ModdedAbilityPlugins)
+                (ModAssemblyStorage.ModdedCharacterAssemblies,     ModdedCharacterPlugins),
+                (ModAssemblyStorage.ModdedEnemyAssemblies,         ModdedEnemyPlugins),
+                (ModAssemblyStorage.ModdedWearableAssemblies,      ModdedWearablePlugins),
+                (ModAssemblyStorage.ModdedAchievementAssemblies,   ModdedAchievementPlugins),
+                (ModAssemblyStorage.ModdedAbilityAssemblies,       ModdedAbilityPlugins)
             };
 
             foreach (var (asmbls, pinfos) in pairs)
