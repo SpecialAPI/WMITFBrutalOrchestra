@@ -8,8 +8,6 @@ namespace WMITF
 {
     public static class ConsoleCommands
     {
-        public static AutocompletionGroup AbilityAutocomplete = new(GetAbilityIDs);
-
         public static void Init()
         {
             var group = new DebugCommandGroup("wmitf", "The group for debug commands added by WMITF.");
@@ -17,7 +15,7 @@ namespace WMITF
 
             group.children.Add(new DebugCommand("item", "Tells you what mod an item is from.", new()
             {
-                new StringCommandArgument("itemID", DebugController.ItemAutocomplete)
+                new StringCommandArgument("itemID", new(() => PluginFinder.ModdedWearablePlugins.Keys))
             }, x =>
             {
                 var id = x[0].Read<string>();
@@ -41,7 +39,7 @@ namespace WMITF
 
             group.children.Add(new DebugCommand("character", "Tells you what mod a character is from.", new()
             {
-                new StringCommandArgument("characterID", DebugController.CharacterAutocomplete)
+                new StringCommandArgument("characterID", new(() => PluginFinder.ModdedCharacterPlugins.Keys))
             }, x =>
             {
                 var id = x[0].Read<string>();
@@ -65,7 +63,7 @@ namespace WMITF
 
             group.children.Add(new DebugCommand("enemy", "Tells you what mod an enemy is from.", new()
             {
-                new StringCommandArgument("enemyID", DebugController.EnemyAutocomplete)
+                new StringCommandArgument("enemyID", new(() => PluginFinder.ModdedEnemyPlugins.Keys))
             }, x =>
             {
                 var id = x[0].Read<string>();
@@ -89,7 +87,7 @@ namespace WMITF
 
             group.children.Add(new DebugCommand("ability", "Tells you what mod an ability is from.", new()
             {
-                new StringCommandArgument("abilityID", AbilityAutocomplete)
+                new StringCommandArgument("abilityID", new(() => PluginFinder.ModdedAbilityPlugins.Keys))
             }, x =>
             {
                 var id = x[0].Read<string>();
@@ -112,23 +110,6 @@ namespace WMITF
                 else
                     DebugController.Instance.WriteLine($"{ab.GetAbilityLocData().text} ({ab.name}) is either not modded or is not recognized by WMITF.");
             }));
-        }
-
-        public static HashSet<string> GetAbilityIDs()
-        {
-            var hs = new HashSet<string>();
-
-            foreach (var a in LoadedDBsHandler.AbilityDB._characterAbilityPool)
-                hs.Add(a);
-            foreach (var a in LoadedDBsHandler.AbilityDB._enemyAbilityPool)
-                hs.Add(a);
-
-            foreach (var a in LoadedAssetsHandler.LoadedEnemyAbilities.Keys)
-                hs.Add(a);
-            foreach (var a in LoadedAssetsHandler.LoadedCharacterAbilities.Keys)
-                hs.Add(a);
-
-            return hs;
         }
     }
 }
