@@ -40,8 +40,8 @@ namespace WMITF
 
         public static string DisplayMod_AddModName(string orig, SlotStatusEffectInfoSO info)
         {
-            //if (!ModConfig.ShowModsForItems)
-            //    return orig;
+            if (ModConfig.ShowModsForFieldEffects != StatusFieldDisplayCondition.On)
+                return orig;
 
             if (orig == null)
                 return orig;

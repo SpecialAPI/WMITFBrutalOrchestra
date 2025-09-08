@@ -16,6 +16,8 @@ namespace WMITF
         public static ConfigEntry<bool> ShowModsForItemsConfig;
         public static ConfigEntry<bool> ShowModsForAchievementsConfig;
         public static ConfigEntry<AbilityModDisplayCondition> ShowModsForAbilitiesConfig;
+        public static ConfigEntry<StatusFieldDisplayCondition> ShowModsForStatusEffectsConfig;
+        public static ConfigEntry<StatusFieldDisplayCondition> ShowModsForFieldEffectsConfig;
 
         public static Color ModLabelColor => ModLabelColorConfig.Value;
         public static bool ShowModsForCharacters => ShowModsForCharactersConfig.Value;
@@ -23,6 +25,8 @@ namespace WMITF
         public static bool ShowModsForItems => ShowModsForCharactersConfig.Value;
         public static bool ShowModsForAchievements => ShowModsForAchievementsConfig.Value;
         public static AbilityModDisplayCondition ShowModsForAbilities => ShowModsForAbilitiesConfig.Value;
+        public static StatusFieldDisplayCondition ShowModsForStatusEffects => ShowModsForStatusEffectsConfig.Value;
+        public static StatusFieldDisplayCondition ShowModsForFieldEffects => ShowModsForFieldEffectsConfig.Value;
 
         public static void Init(ConfigFile file)
         {
@@ -34,6 +38,8 @@ namespace WMITF
             ShowModsForItemsConfig = file.Bind("ModDisplay", "DisplayModsForItems", true, "Whether or not WMITF displays mods for items.");
             ShowModsForAchievementsConfig = file.Bind("ModDisplay", "DisplayModsForAchievements", true, "Whether or not WMITF displays mods for achievements.");
             ShowModsForAbilitiesConfig = file.Bind("ModDisplay", "DisplayModsForAbilities", AbilityModDisplayCondition.OnlyForExtraAbilities, "Whether or not WMITF displays mods for abilities.");
+            ShowModsForStatusEffectsConfig = file.Bind("ModDisplay", "DisplayModsForStatusEffects", StatusFieldDisplayCondition.On, "Whether or not WMITF displays mods for status effects.");
+            ShowModsForFieldEffectsConfig = file.Bind("ModDisplay", "DisplayModsForFieldEffects", StatusFieldDisplayCondition.On, "Whether or not WMITF displays mods for field effects.");
         }
 
         public static string FormatModDisplay(string modName)
@@ -46,6 +52,13 @@ namespace WMITF
     {
         Off,
         OnlyForExtraAbilities,
+        On
+    }
+
+    public enum StatusFieldDisplayCondition
+    {
+        Off,
+        OnlyInGlossary,
         On
     }
 }

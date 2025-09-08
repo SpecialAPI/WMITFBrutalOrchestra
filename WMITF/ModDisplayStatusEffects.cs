@@ -53,8 +53,8 @@ namespace WMITF
 
         public static string DisplayMod_AddModName(string orig, StatusEffectInfoSO info)
         {
-            //if (!ModConfig.ShowModsForItems)
-            //    return orig;
+            if (ModConfig.ShowModsForStatusEffects != StatusFieldDisplayCondition.On)
+                return orig;
 
             if (orig == null)
                 return orig;
