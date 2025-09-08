@@ -1,7 +1,9 @@
 ﻿using BepInEx.Logging;
 using BrutalAPI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace WMITF
@@ -134,6 +136,82 @@ namespace WMITF
                 else
                     DebugController.Instance.WriteLine($"{ach.GetAchLocData().text} is either not modded or is not recognized by WMITF.");
             }));
+
+            group.children.Add(new DebugCommand("statuseffect", "Tells you what mod a status effect is from.", new()
+            {
+                new StringCommandArgument("statusEffectID", new(LoadWMITFStatusIDs))
+            }, x =>
+            {
+                var id = x[0].Read<string>();
+
+                if (id == null)
+                    return;
+
+                if (!LoadedDBsHandler.StatusFieldDB.TryGetStatusEffect(id, out var status) || status.EffectInfo == null)
+                {
+                    DebugController.Instance.WriteLine($"Unknown status effect \"{id}\".", LogLevel.Error);
+                    return;
+                }
+
+                if (PluginFinder.ModdedStatusEffectPlugins.TryGetValue(status.EffectInfo, out var plugin))
+                    DebugController.Instance.WriteLine($"{status.EffectInfo.GetStatusLocData().text} ({status.StatusID}) is from {plugin.Metadata.Name ?? "[null plugin name, this should not be happening]"} ({plugin.Metadata.GUID ?? "[null plugin GUID, this should not be happening"})");
+                else
+                    DebugController.Instance.WriteLine($"{status.EffectInfo.GetStatusLocData().text} ({status.StatusID}) is either not modded or is not recognized by WMITF.");
+            }));
+
+            group.children.Add(new DebugCommand("fieldeffect", "Tells you what mod a status effect is from.", new()
+            {
+                new StringCommandArgument("fieldEffectID", new(LoadWMITFFieldIDs))
+            }, x =>
+            {
+                var id = x[0].Read<string>();
+
+                if (id == null)
+                    return;
+
+                if (!LoadedDBsHandler.StatusFieldDB.TryGetFieldEffect(id, out var field) || field.EffectInfo == null)
+                {
+                    DebugController.Instance.WriteLine($"Unknown field effect \"{id}\".", LogLevel.Error);
+                    return;
+                }
+
+                if (PluginFinder.ModdedFieldEffectPlugins.TryGetValue(field.EffectInfo, out var plugin))
+                    DebugController.Instance.WriteLine($"{field.EffectInfo.GetFieldLocData().text} ({field.FieldID}) is from {plugin.Metadata.Name ?? "[null plugin name, this should not be happening]"} ({plugin.Metadata.GUID ?? "[null plugin GUID, this should not be happening"})");
+                else
+                    DebugController.Instance.WriteLine($"{field.EffectInfo.GetFieldLocData().text} ({field.FieldID}) is either not modded or is not recognized by WMITF.");
+            }));
+        }
+
+        public static HashSet<string> LoadWMITFStatusIDs()
+        {
+            var output = new HashSet<string>();
+            var statuses = LoadedDBsHandler.StatusFieldDB.StatusEffects;
+
+            foreach(var kvp in statuses)
+            {
+                if (kvp.Value == null || kvp.Value.EffectInfo == null || !PluginFinder.ModdedStatusEffectPlugins.ContainsKey(kvp.Value.EffectInfo))
+                    continue;
+
+                output.Add(kvp.Key);
+            }
+
+            return output;
+        }
+
+        public static HashSet<string> LoadWMITFFieldIDs()
+        {
+            var output = new HashSet<string>();
+            var fields = LoadedDBsHandler.StatusFieldDB.FieldEffects;
+
+            foreach (var kvp in fields)
+            {
+                if (kvp.Value == null || kvp.Value.EffectInfo == null || !PluginFinder.ModdedFieldEffectPlugins.ContainsKey(kvp.Value.EffectInfo))
+                    continue;
+
+                output.Add(kvp.Key);
+            }
+
+            return output;
         }
     }
 }

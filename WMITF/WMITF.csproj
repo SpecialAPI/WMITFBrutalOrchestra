@@ -21,6 +21,12 @@
     <Reference Include="BrutalAPI">
       <HintPath>..\..\References\BrutalOrchestra\BrutalAPI.dll</HintPath>
     </Reference>
+    <Reference Include="Marosi.SerializableCollections">
+      <HintPath>..\..\References\Unity\Marosi.SerializableCollections.dll</HintPath>
+    </Reference>
+    <Reference Include="Marosi.Utility">
+      <HintPath>..\..\References\Unity\Marosi.Utility.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\..\References\Unity\Unity.TextMeshPro.dll</HintPath>
     </Reference>
