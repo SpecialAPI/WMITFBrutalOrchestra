@@ -7,6 +7,8 @@ Currently this mod works for:
 * Enemies
 * Abilities (by default, only enabled for extra abilities, such as those added by Construct)
 * Achievements
+* Status effects
+* Field effects
 
 # Console Commands
 This mod also adds the following console commands:
@@ -15,6 +17,8 @@ This mod also adds the following console commands:
 * **wmitf enemy \[enemyID\]**  - Tells what mod an enemy is from.
 * **wmitf ability \[abilityID\]**  - Tells what mod an ability is from.
 * **wmitf achievement \[achievementID\]**  - Tells what mod an achievement is from.
+* **wmitf statuseffect \[statusEffectID\]**  - Tells what mod a status effect is from.
+* **wmitf fieldeffect \[fieldEffectID\]**  - Tells what mod a field effect is from.
 
 # Config
 The color of the mod display, as well as whether it's enabled for different types of content can be changed in the config file:
