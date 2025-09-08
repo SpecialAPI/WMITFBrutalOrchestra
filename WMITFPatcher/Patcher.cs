@@ -53,6 +53,7 @@ namespace WMITFPatcher
             var module = assembly.MainModule;
             var loadedAssetsHandler = module.GetType("LoadedAssetsHandler");
             var achievementManager = module.GetType("AchievementsManagerData");
+            var statusFieldDB = module.GetType("StatusFieldDataBase");
             var abilitySO = module.GetType("AbilitySO");
 
             var assemblyStorage = wmitfModule.GetType("WMITF.ModAssemblyStorage");
@@ -66,6 +67,8 @@ namespace WMITFPatcher
                 [loadedAssetsHandler.FindMethod("AddExternalEnemyAbility")]     = ("ModdedAbilityAssemblies",       "RegisterID"),
                 [loadedAssetsHandler.FindMethod("AddExternalCharacterAbility")] = ("ModdedAbilityAssemblies",       "RegisterID"),
                 [abilitySO.FindMethod(".ctor")]                                 = ("ModdedAbilitySOAssemblies",     "RegisterAbilitySO"),
+                [statusFieldDB.FindMethod("AddNewStatusEffect")]                = ("ModdedStatusEffectAssemblies",  "RegisterID_StatusEffect"),
+                [statusFieldDB.FindMethod("AddNewFieldEffect")]                 = ("ModdedFieldEffectAssemblies",   "RegisterID_FieldEffect"),
             };
 
             foreach (var kvp in methods)
@@ -81,7 +84,7 @@ namespace WMITFPatcher
                 crs.Goto(crs.Prev, MoveType.Before);
 
                 crs.Emit(OpCodes.Ldsfld, module.ImportReference(dictField));
-                crs.Emit(mthd.Name == "TryAddModdedAchievement" ? OpCodes.Ldarg_1 : OpCodes.Ldarg_0);
+                crs.Emit((mthd.IsStatic || mthd.Name == ".ctor") ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
                 crs.Emit(OpCodes.Call, module.ImportReference(registerMethod));
             }
 

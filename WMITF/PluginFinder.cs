@@ -17,6 +17,9 @@ namespace WMITF
         public static readonly Dictionary<string, PluginInfo> ModdedAchievementPlugins = [];
         public static readonly Dictionary<string, PluginInfo> ModdedAbilityPlugins = [];
 
+        public static readonly Dictionary<StatusEffectInfoSO, PluginInfo> ModdedStatusEffectPlugins = [];
+        public static readonly Dictionary<SlotStatusEffectInfoSO, PluginInfo> ModdedFieldEffectPlugins = [];
+
         public static void Init()
         {
             var pairs = new List<(Dictionary<string, Assembly> asmbls, Dictionary<string, PluginInfo> pinfos)>()
@@ -41,7 +44,27 @@ namespace WMITF
                 }
             }
 
-            foreach(var kvp in ModAssemblyStorage.ModdedAbilitySOAssemblies)
+            foreach (var kvp in ModAssemblyStorage.ModdedStatusEffectAssemblies)
+            {
+                var plugin = FindPluginWithAssembly(kvp.Value);
+
+                if (plugin == null)
+                    continue;
+
+                ModdedStatusEffectPlugins[kvp.Key] = plugin;
+            }
+
+            foreach (var kvp in ModAssemblyStorage.ModdedFieldEffectAssemblies)
+            {
+                var plugin = FindPluginWithAssembly(kvp.Value);
+
+                if (plugin == null)
+                    continue;
+
+                ModdedFieldEffectPlugins[kvp.Key] = plugin;
+            }
+
+            foreach (var kvp in ModAssemblyStorage.ModdedAbilitySOAssemblies)
             {
                 var ab = kvp.Key;
 
@@ -136,6 +159,34 @@ namespace WMITF
             var id = ability.name;
 
             if (string.IsNullOrEmpty(id) || !ModdedAbilityPlugins.TryGetValue(id, out var plugin))
+                return false;
+
+            modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
+            return true;
+        }
+
+        public static bool TryGetStatusEffectModName(StatusEffectInfoSO se, out string modName)
+        {
+            modName = string.Empty;
+
+            if (se == null)
+                return false;
+
+            if (!ModdedStatusEffectPlugins.TryGetValue(se, out var plugin))
+                return false;
+
+            modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
+            return true;
+        }
+
+        public static bool TryGetFieldEffectModName(SlotStatusEffectInfoSO fe, out string modName)
+        {
+            modName = string.Empty;
+
+            if (fe == null)
+                return false;
+
+            if (!ModdedFieldEffectPlugins.TryGetValue(fe, out var plugin))
                 return false;
 
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);

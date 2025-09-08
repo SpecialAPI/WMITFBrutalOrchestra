@@ -34,6 +34,8 @@ namespace WMITF
         public static readonly Dictionary<string, Assembly> ModdedAchievementAssemblies = [];
         public static readonly Dictionary<string, Assembly> ModdedAbilityAssemblies = [];
 
+        public static readonly Dictionary<StatusEffectInfoSO, Assembly> ModdedStatusEffectAssemblies = [];
+        public static readonly Dictionary<SlotStatusEffectInfoSO, Assembly> ModdedFieldEffectAssemblies = [];
         public static readonly Dictionary<AbilitySO, Assembly> ModdedAbilitySOAssemblies = [];
 
         public static void RegisterAbilitySO(Dictionary<AbilitySO, Assembly> dict, AbilitySO ab)
@@ -44,6 +46,26 @@ namespace WMITF
                 return;
 
             dict[ab] = asmbl;
+        }
+
+        public static void RegisterID_StatusEffect(Dictionary<StatusEffectInfoSO, Assembly> dict, StatusEffect_SO se)
+        {
+            var asmbl = GetModAssemblyFromStackTrace();
+
+            if (asmbl == null || dict == null || se == null || se.EffectInfo == null)
+                return;
+
+            dict[se.EffectInfo] = asmbl;
+        }
+
+        public static void RegisterID_FieldEffect(Dictionary<SlotStatusEffectInfoSO, Assembly> dict, FieldEffect_SO fe)
+        {
+            var asmbl = GetModAssemblyFromStackTrace();
+
+            if (asmbl == null || dict == null || fe == null || fe.EffectInfo == null)
+                return;
+
+            dict[fe.EffectInfo] = asmbl;
         }
 
         public static void RegisterID_Achievement(Dictionary<string, Assembly> dict, ModdedAchievement_t ach)
