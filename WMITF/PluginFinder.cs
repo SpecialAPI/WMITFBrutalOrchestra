@@ -85,6 +85,17 @@ namespace WMITF
             }
         }
 
+        public static bool PluginIsIgnored(PluginInfo plugin)
+        {
+            if (ModConfig.IgnoredMods == null)
+                return false;
+
+            if(Array.IndexOf(ModConfig.IgnoredMods, plugin.Metadata.GUID) < 0)
+                return false;
+
+            return true;
+        }
+
         public static bool TryGetCharacterModName(CharacterSO character, out string modName)
         {
             modName = string.Empty;
@@ -95,6 +106,9 @@ namespace WMITF
             var id = character.name;
 
             if (string.IsNullOrEmpty(id) || !ModdedCharacterPlugins.TryGetValue(id, out var plugin))
+                return false;
+
+            if (PluginIsIgnored(plugin))
                 return false;
 
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
@@ -113,6 +127,9 @@ namespace WMITF
             if (string.IsNullOrEmpty(id) || !ModdedEnemyPlugins.TryGetValue(id, out var plugin))
                 return false;
 
+            if (PluginIsIgnored(plugin))
+                return false;
+
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
             return true;
         }
@@ -127,6 +144,9 @@ namespace WMITF
             var id = wearable.name;
 
             if (string.IsNullOrEmpty(id) || !ModdedWearablePlugins.TryGetValue(id, out var plugin))
+                return false;
+
+            if (PluginIsIgnored(plugin))
                 return false;
 
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
@@ -145,6 +165,9 @@ namespace WMITF
             if (string.IsNullOrEmpty(id) || !ModdedAchievementPlugins.TryGetValue(id, out var plugin))
                 return false;
 
+            if (PluginIsIgnored(plugin))
+                return false;
+
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
             return true;
         }
@@ -161,6 +184,9 @@ namespace WMITF
             if (string.IsNullOrEmpty(id) || !ModdedAbilityPlugins.TryGetValue(id, out var plugin))
                 return false;
 
+            if (PluginIsIgnored(plugin))
+                return false;
+
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
             return true;
         }
@@ -175,6 +201,9 @@ namespace WMITF
             if (!ModdedStatusEffectPlugins.TryGetValue(se, out var plugin))
                 return false;
 
+            if (PluginIsIgnored(plugin))
+                return false;
+
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
             return true;
         }
@@ -187,6 +216,9 @@ namespace WMITF
                 return false;
 
             if (!ModdedFieldEffectPlugins.TryGetValue(fe, out var plugin))
+                return false;
+
+            if (PluginIsIgnored(plugin))
                 return false;
 
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);

@@ -19,6 +19,9 @@ namespace WMITF
         public static ConfigEntry<StatusFieldDisplayCondition> ShowModsForStatusEffectsConfig;
         public static ConfigEntry<StatusFieldDisplayCondition> ShowModsForFieldEffectsConfig;
 
+        public static ConfigEntry<string> IgnoredModsConfig;
+        public static string[] IgnoredMods = [];
+
         public static Color ModLabelColor => ModLabelColorConfig.Value;
         public static bool ShowModsForCharacters => ShowModsForCharactersConfig.Value;
         public static bool ShowModsForEnemies => ShowModsForCharactersConfig.Value;
@@ -40,6 +43,26 @@ namespace WMITF
             ShowModsForAbilitiesConfig = file.Bind("ModDisplay", "DisplayModsForAbilities", AbilityModDisplayCondition.OnlyForExtraAbilities, "Whether or not WMITF displays mods for abilities.");
             ShowModsForStatusEffectsConfig = file.Bind("ModDisplay", "DisplayModsForStatusEffects", StatusFieldDisplayCondition.On, "Whether or not WMITF displays mods for status effects.");
             ShowModsForFieldEffectsConfig = file.Bind("ModDisplay", "DisplayModsForFieldEffects", StatusFieldDisplayCondition.On, "Whether or not WMITF displays mods for field effects.");
+
+            IgnoredModsConfig = file.Bind("ModDisplay.ModsFilter", "IgnoredMods", "", "The GUIDs of mods that will be ignord by WMITF, separated by | symbols.");
+            IgnoredModsConfig.SettingChanged += IgnoredModsConfigSettingChanged;
+            UpdateIgnoredModsArray();
+        }
+
+        public static void IgnoredModsConfigSettingChanged(object sender, EventArgs e)
+        {
+            if (e == EventArgs.Empty)
+                return;
+
+            UpdateIgnoredModsArray();
+        }
+
+        public static void UpdateIgnoredModsArray()
+        {
+            if (IgnoredModsConfig == null)
+                return;
+
+            IgnoredMods = (IgnoredModsConfig.Value ?? "").Split(['|'], StringSplitOptions.RemoveEmptyEntries);
         }
 
         public static string FormatModDisplay(string modName)
