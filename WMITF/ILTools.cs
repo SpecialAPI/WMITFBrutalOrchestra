@@ -11,16 +11,16 @@ using System.Text;
 namespace WMITF
 {
     /// <summary>
-    /// IL-related extension methods.
+    /// Static class that provides IL-related tools and extensions.
     /// </summary>
     public static class ILTools
     {
         /// <summary>
-        /// Moves the cursor after the next instruction that matches the given condition a given number of times.
+        /// Tries to move an IL cursor after the next instruction that matches a specific condition a specific number of times.
         /// </summary>
-        /// <param name="crs">The cursor to move.</param>
-        /// <param name="match">Condition for the target instruction.</param>
-        /// <param name="times">How many times the cursor should move.</param>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="match">The condition that needs to be met for the cursor to move to a specific instruction.</param>
+        /// <param name="times">The amount of times the cursor should move.</param>
         /// <returns>True if all the moves were successful, false otherwise.</returns>
         public static bool JumpToNext(this ILCursor crs, Func<Instruction, bool> match, int times = 1)
         {
@@ -34,11 +34,11 @@ namespace WMITF
         }
 
         /// <summary>
-        /// Moves the cursor before the next instruction that matches the given condition a given number of times.
+        /// Tries to move an IL cursor before the next instruction that matches a specific condition a specific number of times.
         /// </summary>
-        /// <param name="crs">The cursor to move.</param>
-        /// <param name="match">Condition for the target instruction.</param>
-        /// <param name="times">How many times the cursor should move.</param>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="match">The condition that needs to be met for the cursor to move to a specific instruction.</param>
+        /// <param name="times">The amount of times the cursor should move.</param>
         /// <returns>True if all the moves were successful, false otherwise.</returns>
         public static bool JumpBeforeNext(this ILCursor crs, Func<Instruction, bool> match, int times = 1)
         {
@@ -52,12 +52,13 @@ namespace WMITF
         }
 
         /// <summary>
-        /// Moves after all instructions that match the given condition.
+        /// Returns an enumerable that moves the IL cursor after the next instruction matching a specific condition each iteration. Each iteration returns the instruction that the cursor has moved to.
+        /// <para>After there are no more instructions that meet the condition ahead of the cursor, the cursor is moved back to the position where it was before iteration started.</para>
         /// </summary>
-        /// <param name="crs">The cursor to move.</param>
-        /// <param name="match">Condition for the target instruction.</param>
-        /// <param name="matchFromStart">If true, this will check all instructions. If false, this will only check instructions after the cursor's current position.</param>
-        /// <returns></returns>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="match">The condition that needs to be met for the cursor to move to a specific instruction.</param>
+        /// <param name="matchFromStart">If true, the cursor will be moved to the start of the instructions list before iteration starts.</param>
+        /// <returns>An enumerable that moves the IL cursor each iteration.</returns>
         public static IEnumerable MatchAfter(this ILCursor crs, Func<Instruction, bool> match, bool matchFromStart = true)
         {
             var curr = crs.Next;
@@ -72,12 +73,13 @@ namespace WMITF
         }
 
         /// <summary>
-        /// Moves before all instructions that match the given condition.
+        /// Returns an enumerable that moves the IL cursor before the next instruction matching a specific condition each iteration. Each iteration returns the instruction that the cursor has moved to.
+        /// <para>After there are no more instructions that meet the condition ahead of the cursor, the cursor is moved back to the position where it was before iteration started.</para>
         /// </summary>
-        /// <param name="crs">The cursor to move.</param>
-        /// <param name="match">Condition for the target instruction.</param>
-        /// <param name="matchFromStart">If true, this will check all instructions. If false, this will only check instructions after the cursor's current position.</param>
-        /// <returns></returns>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="match">The condition that needs to be met for the cursor to move to a specific instruction.</param>
+        /// <param name="matchFromStart">If true, the cursor will be moved to the start of the instructions list before iteration starts.</param>
+        /// <returns>An enumerable that moves the IL cursor each iteration.</returns>
         public static IEnumerable MatchBefore(this ILCursor crs, Func<Instruction, bool> match, bool matchFromStart = true)
         {
             var curr = crs.Next;
@@ -97,11 +99,11 @@ namespace WMITF
         }
 
         /// <summary>
-        /// Declares a new local in the given ILContext.
+        /// Declares a new local variable in an IL context.
         /// </summary>
-        /// <typeparam name="T">The type for the new local.</typeparam>
-        /// <param name="ctx">The context to declare the local in.</param>
-        /// <returns>The definition for the new local.</returns>
+        /// <typeparam name="T">The value type for the new local variable.</typeparam>
+        /// <param name="ctx">The context to declare the local variable in.</param>
+        /// <returns>The definition for the new local variable.</returns>
         public static VariableDefinition DeclareLocal<T>(this ILContext ctx)
         {
             var loc = new VariableDefinition(ctx.Import(typeof(T)));
@@ -111,25 +113,25 @@ namespace WMITF
         }
 
         /// <summary>
-        /// Declares a new local in the given ILCursor's context.
+        /// Declares a new local variable in an IL cursor's IL context.
         /// </summary>
-        /// <typeparam name="T">The type for the new local.</typeparam>
-        /// <param name="ctx">The cursor to declare the local in.</param>
-        /// <returns>The definition for the new local.</returns>
+        /// <typeparam name="T">The value type for the new local variable.</typeparam>
+        /// <param name="crs">The cursor whose context the local variable will be declared in.</param>
+        /// <returns>The definition for the new local variable.</returns>
         public static VariableDefinition DeclareLocal<T>(this ILCursor crs)
         {
             return crs.Context.DeclareLocal<T>();
         }
 
         /// <summary>
-        /// Moves after an instruction that will push an argument value for the given instruction.
+        /// Tries to move an IL cursor after an instruction that pushes a value that will be used as a specific argument by the input instruction.
         /// </summary>
-        /// <param name="crs">The cursor to move.</param>
-        /// <param name="targetInstr">The instruction that the move target will push an argument for.</param>
-        /// <param name="argIndex">Which argument of the instruction should this move after?</param>
-        /// <param name="instance">Which instance of the argument instrution should this move after? Only matters for branching arguments.</param>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="targetInstr">The instruction that the move target needs to push an argument value for.</param>
+        /// <param name="argIndex">The index of the argument that the move target needs to push a value for.</param>
+        /// <param name="instance">The number of the argument intstruction this needs to move after. This matters if there are multiple instructions that can push the argument value for the input instruction.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public static bool TryGotoArg(this ILCursor crs, Instruction targetInstr, int argIndex, int instance = 0)
+        public static bool TryGotoArgForInstruction(this ILCursor crs, Instruction targetInstr, int argIndex, int instance = 0)
         {
             if (argIndex < 0)
                 return false;
@@ -150,25 +152,38 @@ namespace WMITF
         }
 
         /// <summary>
-        /// Moves after an instruction that will push an argument value for the cursor's next instruction.
+        /// Tries to move an IL cursor after an instruction that pushes a value that will be used as a specific argument by the cursor's next instruction.
         /// </summary>
-        /// <param name="crs">The cursor to move.</param>
-        /// <param name="argIndex">Which argument of the instruction should this move after?</param>
-        /// <param name="instance">Which instance of the argument instrution should this move after? Only matters for branching arguments.</param>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="argIndex">The index of the argument that the move target needs to push a value for.</param>
+        /// <param name="instance">The number of the argument intstruction this needs to move after. This matters if there are multiple instructions that can push the argument value for the next instruction.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public static bool TryGotoArg(this ILCursor crs, int argIndex, int instance = 0)
+        public static bool TryGotoArgForNext(this ILCursor crs, int argIndex, int instance = 0)
         {
-            return crs.TryGotoArg(crs.Next, argIndex, instance);
+            return crs.TryGotoArgForInstruction(crs.Next, argIndex, instance);
         }
 
         /// <summary>
-        /// Moves after all instructions that will push an argument value for the given instruction.
+        /// Tries to move an IL cursor after an instruction that pushes a value that will be used as a specific argument by the cursor's previous instruction.
         /// </summary>
-        /// <param name="crs">The cursor to move.</param>
-        /// <param name="targetInstr">The instruction that the move target will push an argument for.</param>
-        /// <param name="argIndex">Which argument of the instruction should this move after?</param>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="argIndex">The index of the argument that the move target needs to push a value for.</param>
+        /// <param name="instance">The number of the argument intstruction this needs to move after. This matters if there are multiple instructions that can push the argument value for the previous instruction.</param>
         /// <returns>True if successful, false otherwise.</returns>
-        public static IEnumerable MatchArg(this ILCursor crs, Instruction targetInstr, int argIndex)
+        public static bool TryGotoArgForPrevious(this ILCursor crs, int argIndex, int instance = 0)
+        {
+            return crs.TryGotoArgForInstruction(crs.Previous, argIndex, instance);
+        }
+
+        /// <summary>
+        /// Returns an enumerable that moves the IL cursor after the next instruction that pushes a value that will be used as a specific argument by the input instruction each iteration, starting from the first instruction that does so. Each iteration returns the instruction that the cursor moved to.
+        /// <para>After there are no more instructions that meet the condition ahead of the cursor, the cursor is moved back to the position where it was before iteration started.</para>
+        /// </summary>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="targetInstr">The instruction that the move targets need to push argument values for.</param>
+        /// <param name="argIndex">The index of the argument that the move targets need to push values for.</param>
+        /// <returns>An enumerable that moves the IL cursor each iteration.</returns>
+        public static IEnumerable MatchArgForInstruction(this ILCursor crs, Instruction targetInstr, int argIndex)
         {
             if (argIndex < 0)
                 yield break;
@@ -190,14 +205,27 @@ namespace WMITF
         }
 
         /// <summary>
-        /// Moves after all instructions that will push an argument value for the cursor's next instruction.
+        /// Returns an enumerable that moves the IL cursor after the next instruction that pushes a value that will be used as a specific argument by the cursor's current next instruction each iteration, starting from the first instruction that does so. Each iteration returns the instruction that the cursor moved to.
+        /// <para>After there are no more instructions that meet the condition ahead of the cursor, the cursor is moved back to the position where it was before iteration started.</para>
         /// </summary>
-        /// <param name="crs">The cursor to move.</param>
-        /// <param name="argIndex">Which argument of the instruction should this move after?</param>
-        /// <returns>True if successful, false otherwise.</returns>
-        public static IEnumerable MatchArg(this ILCursor crs, int argIndex)
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="argIndex">The index of the argument that the move targets need to push values for.</param>
+        /// <returns>An enumerable that moves the IL cursor each iteration.</returns>
+        public static IEnumerable MatchArgForNext(this ILCursor crs, int argIndex)
         {
-            return crs.MatchArg(crs.Next, argIndex);
+            return crs.MatchArgForInstruction(crs.Next, argIndex);
+        }
+
+        /// <summary>
+        /// Returns an enumerable that moves the IL cursor after the next instruction that pushes a value that will be used as a specific argument by the cursor's current previous instruction each iteration, starting from the first instruction that does so. Each iteration returns the instruction that the cursor moved to.
+        /// <para>After there are no more instructions that meet the condition ahead of the cursor, the cursor is moved back to the position where it was before iteration started.</para>
+        /// </summary>
+        /// <param name="crs">The IL cursor that will be moved.</param>
+        /// <param name="argIndex">The index of the argument that the move targets need to push values for.</param>
+        /// <returns>An enumerable that moves the IL cursor each iteration.</returns>
+        public static IEnumerable MatchArgForPrevious(this ILCursor crs, int argIndex)
+        {
+            return crs.MatchArgForInstruction(crs.Previous, argIndex);
         }
 
         private static List<Instruction> GetArgumentInstructions(this Instruction instruction, ILContext context, int argumentIndex)
@@ -236,12 +264,7 @@ namespace WMITF
                 BacktrackToArg(i, ctx, remainingMoves, foundArgs);
         }
 
-        /// <summary>
-        /// Returns how many values the given instruction will pop from the stack.
-        /// </summary>
-        /// <param name="instr">The instruction to check.</param>
-        /// <returns>How many values the given instruction will pop from the stack.</returns>
-        public static int InputCount(this Instruction instr)
+        private static int InputCount(this Instruction instr)
         {
             if (instr == null)
                 return 0;
@@ -275,12 +298,7 @@ namespace WMITF
             };
         }
 
-        /// <summary>
-        /// Returns how many values the given instruction will push to the stack.
-        /// </summary>
-        /// <param name="instr">The instruction to check.</param>
-        /// <returns>How many values the given instruction will push to the stack.</returns>
-        public static int OutputCount(this Instruction instr)
+        private static int OutputCount(this Instruction instr)
         {
             if (instr == null)
                 return 0;
@@ -307,23 +325,12 @@ namespace WMITF
             };
         }
 
-        /// <summary>
-        /// Returns how much this instruction changes the stack size.
-        /// </summary>
-        /// <param name="instr">The instruction to check.</param>
-        /// <returns>How much this instruction changes the stack size.</returns>
-        public static int StackDelta(this Instruction instr)
+        private static int StackDelta(this Instruction instr)
         {
             return instr.OutputCount() - instr.InputCount();
         }
 
-        /// <summary>
-        /// Returns the possible instructions that can move to the given instruction.
-        /// </summary>
-        /// <param name="instr">The instruction to check.</param>
-        /// <param name="ctx">The context that contains the given instruction.</param>
-        /// <returns>A list of possible instructions that can move to the given instruction.</returns>
-        public static List<Instruction> PossiblePreviousInstructions(this Instruction instr, ILContext ctx)
+        private static List<Instruction> PossiblePreviousInstructions(this Instruction instr, ILContext ctx)
         {
             var l = new List<Instruction>();
 
@@ -336,12 +343,7 @@ namespace WMITF
             return l;
         }
 
-        /// <summary>
-        /// Returns the possible instructions the given instruction can move to.
-        /// </summary>
-        /// <param name="instr">The instruction to check.</param>
-        /// <returns>A list of possible instructions that can move to the given instruction.</returns>
-        public static Instruction[] PossibleNextInstructions(this Instruction instr)
+        private static Instruction[] PossibleNextInstructions(this Instruction instr)
         {
             return instr.OpCode.FlowControl switch
             {
@@ -353,12 +355,7 @@ namespace WMITF
             };
         }
 
-        /// <summary>
-        /// Returns the given instruction's branch target as an Instruction. If the given instruction doesn't have a branch target, returns null.
-        /// </summary>
-        /// <param name="branch">The instruction to check.</param>
-        /// <returns>The given instruction's branch target or null if there is none.</returns>
-        public static Instruction GetBranchTarget(this Instruction branch)
+        private static Instruction GetBranchTarget(this Instruction branch)
         {
             if (branch.Operand is Instruction tr)
                 return tr;
@@ -370,10 +367,24 @@ namespace WMITF
         }
 
         /// <summary>
-        /// Instruction.ToString() fixed to work with ILLabel branch targets.
+        /// Emits an instruction that calls a static delegate without any additional invocations.
         /// </summary>
-        /// <param name="c">Target instruction.</param>
-        /// <returns>The given instruction converted to a string.</returns>
+        /// <param name="crs">The cursor that should emit the instruction.</param>
+        /// <param name="call">The delegate that the instruction should call.</param>
+        /// <exception cref="ArgumentException"></exception>
+        public static void EmitStaticDelegate(this ILCursor crs, Delegate call)
+        {
+            if (call.GetInvocationList().Length != 1 || call.Target != null)
+                throw new ArgumentException("Delegate is either not static or has additional invocations");
+
+            crs.Emit(OpCodes.Call, call.Method);
+        }
+
+        /// <summary>
+        /// A fixed version of Instruction.ToString() that works with ILLabel branch targets.
+        /// </summary>
+        /// <param name="c">The instruction to convert to a string.</param>
+        /// <returns>The input instruction converted to a string.</returns>
         public static string InstructionToString(this Instruction c)
         {
             if (c == null)
@@ -402,25 +413,33 @@ namespace WMITF
         /// <summary>
         /// Gets the value of a compiler-generated IEnumerator's field.
         /// </summary>
-        /// <typeparam name="T">The field's type.</typeparam>
+        /// <typeparam name="T">The field's value type.</typeparam>
         /// <param name="obj">The enumerator to get the field from.</param>
-        /// <param name="name">The field's name.</param>
+        /// <param name="name">The name of the field. For fields formatted like <![CDATA[<NAME>__NUMBER]]>, giving just <![CDATA[NAME]]> works.</param>
         /// <returns>The field's value.</returns>
         public static T EnumeratorGetField<T>(this object obj, string name) => (T)obj.GetType().EnumeratorField(name).GetValue(obj);
 
         /// <summary>
-        /// Gets a FieldInfo from the given method's declaring IEnumerator type.
+        /// Sets the value of a compiler-generated IEnumerator's field.
         /// </summary>
-        /// <param name="method">The method to get the field from.</param>
-        /// <param name="name">The field's name.</param>
+        /// <param name="obj">The enumerator whose field will be set.</param>
+        /// <param name="name">The name of the field. For fields formatted like <![CDATA[<NAME>__NUMBER]]>, giving just <![CDATA[NAME]]> works.</param>
+        /// <param name="value">The new value for the field.</param>
+        public static void EnumeratorSetField(this object obj, string name, object value) => obj.GetType().EnumeratorField(name).SetValue(obj, value);
+
+        /// <summary>
+        /// Gets a FieldInfo from the given method's declaring compiler-generated IEnumerator type.
+        /// </summary>
+        /// <param name="method">The method whose declaring type the field will be gotten from.</param>
+        /// <param name="name">The name of the field. For fields formatted like <![CDATA[<NAME>__NUMBER]]>, giving just <![CDATA[NAME]]> works.</param>
         /// <returns>The field.</returns>
         public static FieldInfo EnumeratorField(this MethodBase method, string name) => method.DeclaringType.EnumeratorField(name);
 
         /// <summary>
         /// Gets a FieldInfo from the given IEnumerator type.
         /// </summary>
-        /// <param name="tp">The IEnumerator type.</param>
-        /// <param name="name">The field's name.</param>
+        /// <param name="tp">The IEnumerator type to get the field from..</param>
+        /// <param name="name">The name of the field. For fields formatted like <![CDATA[<NAME>__NUMBER]]>, giving just <![CDATA[NAME]]> works.</param>
         /// <returns>The field.</returns>
         public static FieldInfo EnumeratorField(this Type tp, string name) => tp.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic).First(x => x != null && x.Name != null && (x.Name.Contains($"<{name}>") || x.Name == name));
     }
