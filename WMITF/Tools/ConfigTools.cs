@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace WMITF
+namespace WMITF.Tools
 {
     public static class ConfigTools
     {

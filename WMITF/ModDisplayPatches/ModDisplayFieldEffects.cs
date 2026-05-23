@@ -5,8 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using WMITF.Tools;
 
-namespace WMITF
+namespace WMITF.ModDisplayPatches
 {
     [HarmonyPatch]
     public static class ModDisplayFieldEffects

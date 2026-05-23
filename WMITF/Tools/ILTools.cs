@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace WMITF
+namespace WMITF.Tools
 {
     /// <summary>
     /// Static class that provides IL-related tools and extensions.
@@ -44,7 +44,7 @@ namespace WMITF
         {
             for (int i = 0; i < times; i++)
             {
-                if (!crs.TryGotoNext((i == (times - 1)) ? MoveType.Before : MoveType.After, match))
+                if (!crs.TryGotoNext(i == times - 1 ? MoveType.Before : MoveType.After, match))
                     return false;
             }
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace WMITF
+namespace WMITF.Tools
 {
     public class ConfigList<T> : List<T>
     {

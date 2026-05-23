@@ -5,8 +5,9 @@ using System.Text;
 using HarmonyLib;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using WMITF.Tools;
 
-namespace WMITF
+namespace WMITF.ModDisplayPatches
 {
     [HarmonyPatch]
     public static class ModDisplayAchievements
