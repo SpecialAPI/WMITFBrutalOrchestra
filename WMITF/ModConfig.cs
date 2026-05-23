@@ -18,9 +18,7 @@ namespace WMITF
         public static ConfigEntry<AbilityModDisplayCondition> ShowModsForAbilitiesConfig;
         public static ConfigEntry<StatusFieldDisplayCondition> ShowModsForStatusEffectsConfig;
         public static ConfigEntry<StatusFieldDisplayCondition> ShowModsForFieldEffectsConfig;
-
-        public static ConfigEntry<string> IgnoredModsConfig;
-        public static string[] IgnoredMods = [];
+        public static ConfigEntry<ConfigList<string>> IgnoredModsConfig;
 
         public static Color ModLabelColor => ModLabelColorConfig.Value;
         public static bool ShowModsForCharacters => ShowModsForCharactersConfig.Value;
@@ -30,10 +28,12 @@ namespace WMITF
         public static AbilityModDisplayCondition ShowModsForAbilities => ShowModsForAbilitiesConfig.Value;
         public static StatusFieldDisplayCondition ShowModsForStatusEffects => ShowModsForStatusEffectsConfig.Value;
         public static StatusFieldDisplayCondition ShowModsForFieldEffects => ShowModsForFieldEffectsConfig.Value;
+        public static ConfigList<string> IgnoredMods => IgnoredModsConfig.Value;
 
         public static void Init(ConfigFile file)
         {
             File = file;
+            ConfigTools.RegisterListConfigType<string>();
 
             ModLabelColorConfig = file.Bind("ModDisplay", "ModDisplayColor", new Color(0f, 0.5961f, 0.8667f), "The color of the mod display.");
             ShowModsForCharactersConfig = file.Bind("ModDisplay", "DisplayModsForCharacters", true, "Whether or not WMITF displays mods for characters.");
@@ -44,25 +44,7 @@ namespace WMITF
             ShowModsForStatusEffectsConfig = file.Bind("ModDisplay", "DisplayModsForStatusEffects", StatusFieldDisplayCondition.On, "Whether or not WMITF displays mods for status effects.");
             ShowModsForFieldEffectsConfig = file.Bind("ModDisplay", "DisplayModsForFieldEffects", StatusFieldDisplayCondition.On, "Whether or not WMITF displays mods for field effects.");
 
-            IgnoredModsConfig = file.Bind("ModDisplay.ModsFilter", "IgnoredMods", "", "The GUIDs of mods that will be ignord by WMITF, separated by | symbols.");
-            IgnoredModsConfig.SettingChanged += IgnoredModsConfigSettingChanged;
-            UpdateIgnoredModsArray();
-        }
-
-        public static void IgnoredModsConfigSettingChanged(object sender, EventArgs e)
-        {
-            if (e == EventArgs.Empty)
-                return;
-
-            UpdateIgnoredModsArray();
-        }
-
-        public static void UpdateIgnoredModsArray()
-        {
-            if (IgnoredModsConfig == null)
-                return;
-
-            IgnoredMods = (IgnoredModsConfig.Value ?? "").Split(['|'], StringSplitOptions.RemoveEmptyEntries);
+            IgnoredModsConfig = file.Bind("ModDisplay.ModsFilter", "IgnoredMods", new ConfigList<string>(), "The GUIDs of mods that will be ignord by WMITF, separated by commas.");
         }
 
         public static string FormatModDisplay(string modName)

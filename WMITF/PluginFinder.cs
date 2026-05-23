@@ -122,7 +122,7 @@ namespace WMITF
             if (ModConfig.IgnoredMods == null)
                 return false;
 
-            if(Array.IndexOf(ModConfig.IgnoredMods, plugin.Metadata.GUID) < 0)
+            if(!ModConfig.IgnoredMods.Contains(plugin.Metadata.GUID))
                 return false;
 
             return true;
