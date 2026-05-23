@@ -12,7 +12,7 @@ namespace WMITF
     [HarmonyPatch]
     public static class IsExtraAbilityPatch
     {
-        public static FieldInfo isExtraAbilityField = AccessTools.Field(typeof(CombatAbility), "WMITF_isExtraAbility");
+        private static FieldInfo isExtraAbilityField = AccessTools.Field(typeof(CombatAbility), "WMITF_isExtraAbility");
 
         [HarmonyPatch(typeof(CharacterCombat), nameof(CharacterCombat.AddExtraAbility))]
         [HarmonyPatch(typeof(EnemyCombat), nameof(EnemyCombat.AddExtraAbility))]
