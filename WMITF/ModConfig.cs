@@ -45,7 +45,7 @@ namespace WMITF
             ShowModsForStatusEffectsConfig = file.Bind("ModDisplay", "DisplayModsForStatusEffects", StatusFieldDisplayCondition.On, "Whether or not WMITF displays mods for status effects.");
             ShowModsForFieldEffectsConfig = file.Bind("ModDisplay", "DisplayModsForFieldEffects", StatusFieldDisplayCondition.On, "Whether or not WMITF displays mods for field effects.");
 
-            IgnoredModsConfig = file.Bind("ModDisplay.ModsFilter", "IgnoredMods", new ConfigList<string>(), "The GUIDs of mods that will be ignord by WMITF, separated by commas.");
+            IgnoredModsConfig = file.Bind("ModDisplay.ModsFilter", "IgnoredMods", new ConfigList<string>(), "The GUIDs of mods that will be ignored by WMITF's mod display, separated by commas. WMITF's console commands are not affected by this setting.");
         }
 
         public static string FormatModDisplay(string modName)
