@@ -101,17 +101,10 @@ namespace WMITF
             if (parent == null || parent is not RectTransform rectParent)
                 return;
 
-            rectParent.sizeDelta = Vector2.zero;
-
-            if (character == null)
-                return;
-
-            var id = character.name;
-
-            if (string.IsNullOrEmpty(id) || !PluginFinder.ModdedCharacterPlugins.ContainsKey(id))
-                return;
-
-            rectParent.sizeDelta = Vector2.up * 20f;
+            if (PluginFinder.TryGetCharacterModName(character, out _))
+                rectParent.sizeDelta = Vector2.up * 20f;
+            else
+                rectParent.sizeDelta = Vector2.zero;
         }
     }
 }
