@@ -12,8 +12,6 @@ namespace WMITF
     [HarmonyPatch]
     public static class ModDisplayEnemies
     {
-        public static readonly MethodInfo dm_amn = AccessTools.Method(typeof(ModDisplayEnemies), nameof(DisplayMod_AddModName));
-
         [HarmonyPatch(typeof(CombatVisualizationController), nameof(CombatVisualizationController.ShowcaseEnemyTooltip))]
         [HarmonyILManipulator]
         public static void DisplayMod_Transpiler(ILContext ctx)
@@ -24,7 +22,7 @@ namespace WMITF
                 return;
 
             crs.Emit(OpCodes.Ldloc_0);
-            crs.Emit(OpCodes.Call, dm_amn);
+            crs.EmitStaticDelegate(DisplayMod_AddModName);
         }
 
         public static string DisplayMod_AddModName(string orig, EnemyCombatUIInfo inf)

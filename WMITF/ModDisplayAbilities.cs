@@ -14,9 +14,6 @@ namespace WMITF
     {
         public static readonly MethodInfo listCombatAbilityGetItem = AccessTools.Method(typeof(List<CombatAbility>), "get_Item");
 
-        public static readonly MethodInfo dm_sca = AccessTools.Method(typeof(ModDisplayAbilities), nameof(DisplayMod_SaveCombatAbility));
-        public static readonly MethodInfo dm_amn = AccessTools.Method(typeof(ModDisplayAbilities), nameof(DisplayMod_AddModName));
-
         [HarmonyPatch(typeof(CombatVisualizationController), nameof(CombatVisualizationController.ShowcaseInfoAttackTooltip))]
         [HarmonyILManipulator]
         public static void DisplayMod_Transpiler(ILContext ctx)
@@ -28,7 +25,7 @@ namespace WMITF
             foreach(var m in crs.MatchAfter(x => x.MatchCallOrCallvirt(listCombatAbilityGetItem)))
             {
                 crs.Emit(OpCodes.Ldloca, combatAbLocal);
-                crs.Emit(OpCodes.Call, dm_sca);
+                crs.EmitStaticDelegate(DisplayMod_SaveCombatAbility);
             }
 
             if (!crs.JumpBeforeNext(x => x.MatchCallOrCallvirt<TooltipLayout>(nameof(TooltipLayout.DelayShow))))
@@ -36,7 +33,7 @@ namespace WMITF
 
             crs.Emit(OpCodes.Ldloc_0);
             crs.Emit(OpCodes.Ldloc, combatAbLocal);
-            crs.Emit(OpCodes.Call, dm_amn);
+            crs.EmitStaticDelegate(DisplayMod_AddModName);
         }
 
         public static CombatAbility DisplayMod_SaveCombatAbility(CombatAbility curr, out CombatAbility s)

@@ -13,10 +13,6 @@ namespace WMITF
     {
         public static MethodInfo listSlotStatusEffectInfoSOGetItem = AccessTools.Method(typeof(List<SlotStatusEffectInfoSO>), "get_Item");
 
-        public static MethodInfo dm_cet_ssei = AccessTools.Method(typeof(ModDisplayFieldEffects), nameof(DisplayMod_CharacterEnemyTooltip_SaveStatusEffectInfo));
-        public static MethodInfo dm_c_amn = AccessTools.Method(typeof(ModDisplayFieldEffects), nameof(DisplayMod_Combat_AddModName));
-        public static MethodInfo dm_g_amn = AccessTools.Method(typeof(ModDisplayFieldEffects), nameof(DisplayMod_Glossary_AddModName));
-
         [HarmonyPatch(typeof(CombatVisualizationController), nameof(CombatVisualizationController.ShowcaseCharacterFieldTooltip))]
         [HarmonyPatch(typeof(CombatVisualizationController), nameof(CombatVisualizationController.ShowcaseEnemyFieldTooltip))]
         [HarmonyILManipulator]
@@ -30,40 +26,18 @@ namespace WMITF
             var slotStatusEffectInfoLoc = crs.DeclareLocal<SlotStatusEffectInfoSO>();
 
             crs.Emit(OpCodes.Ldloca, slotStatusEffectInfoLoc);
-            crs.Emit(OpCodes.Call, dm_cet_ssei);
+            crs.EmitStaticDelegate(DisplayMod_CharacterEnemyTooltip_SaveStatusEffectInfo);
 
             if (!crs.JumpToNext(x => x.MatchLdfld<StringPairData>(nameof(StringPairData.description))))
                 return;
 
             crs.Emit(OpCodes.Ldloc, slotStatusEffectInfoLoc);
-            crs.Emit(OpCodes.Call, dm_c_amn);
+            crs.EmitStaticDelegate(DisplayMod_Combat_AddModName);
         }
 
-        [HarmonyPatch(typeof(ExtraInformationUIHandler), nameof(ExtraInformationUIHandler.SetGlossaryInformation), typeof(SlotStatusEffectInfoSO))]
-        [HarmonyILManipulator]
-        public static void DisplayMod_Glossary_Transpiler(ILContext ctx)
+        public static SlotStatusEffectInfoSO DisplayMod_CharacterEnemyTooltip_SaveStatusEffectInfo(SlotStatusEffectInfoSO curr, out SlotStatusEffectInfoSO save)
         {
-            var crs = new ILCursor(ctx);
-
-            if (!crs.JumpToNext(x => x.MatchLdfld<StringPairData>(nameof(StringPairData.description))))
-                return;
-
-            crs.Emit(OpCodes.Ldarg_1);
-            crs.Emit(OpCodes.Call, dm_g_amn);
-        }
-
-        public static string DisplayMod_Glossary_AddModName(string orig, SlotStatusEffectInfoSO info)
-        {
-            if (!(ModConfig.ShowModsForFieldEffects is StatusFieldDisplayCondition.On or StatusFieldDisplayCondition.OnlyInGlossary))
-                return orig;
-
-            if (orig == null)
-                return orig;
-
-            if (!PluginFinder.TryGetFieldEffectModName(info, out var modName))
-                return orig;
-
-            return $"{orig}\n\n{modName}";
+            return save = curr;
         }
 
         public static string DisplayMod_Combat_AddModName(string orig, SlotStatusEffectInfoSO info)
@@ -80,9 +54,31 @@ namespace WMITF
             return $"{orig}\n{modName}";
         }
 
-        public static SlotStatusEffectInfoSO DisplayMod_CharacterEnemyTooltip_SaveStatusEffectInfo(SlotStatusEffectInfoSO curr, out SlotStatusEffectInfoSO save)
+        [HarmonyPatch(typeof(ExtraInformationUIHandler), nameof(ExtraInformationUIHandler.SetGlossaryInformation), typeof(SlotStatusEffectInfoSO))]
+        [HarmonyILManipulator]
+        public static void DisplayMod_Glossary_Transpiler(ILContext ctx)
         {
-            return save = curr;
+            var crs = new ILCursor(ctx);
+
+            if (!crs.JumpToNext(x => x.MatchLdfld<StringPairData>(nameof(StringPairData.description))))
+                return;
+
+            crs.Emit(OpCodes.Ldarg_1);
+            crs.EmitStaticDelegate(DisplayMod_Glossary_AddModName);
+        }
+
+        public static string DisplayMod_Glossary_AddModName(string orig, SlotStatusEffectInfoSO info)
+        {
+            if (!(ModConfig.ShowModsForFieldEffects is StatusFieldDisplayCondition.On or StatusFieldDisplayCondition.OnlyInGlossary))
+                return orig;
+
+            if (orig == null)
+                return orig;
+
+            if (!PluginFinder.TryGetFieldEffectModName(info, out var modName))
+                return orig;
+
+            return $"{orig}\n\n{modName}";
         }
     }
 }

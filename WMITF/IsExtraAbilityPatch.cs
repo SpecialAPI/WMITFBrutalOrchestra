@@ -12,8 +12,6 @@ namespace WMITF
     [HarmonyPatch]
     public static class IsExtraAbilityPatch
     {
-        public static MethodInfo siea_aea_s = AccessTools.Method(typeof(IsExtraAbilityPatch), nameof(SetIsExtraAbility_AddExtraAbility_Set));
-
         public static FieldInfo isExtraAbilityField = AccessTools.Field(typeof(CombatAbility), "WMITF_isExtraAbility");
 
         [HarmonyPatch(typeof(CharacterCombat), nameof(CharacterCombat.AddExtraAbility))]
@@ -27,7 +25,18 @@ namespace WMITF
                 return;
 
             crs.Emit(OpCodes.Ldloc_0);
-            crs.Emit(OpCodes.Call, siea_aea_s);
+            crs.EmitStaticDelegate(SetIsExtraAbility_AddExtraAbility_Set);
+        }
+
+        public static void SetIsExtraAbility_AddExtraAbility_Set(CombatAbility ab)
+        {
+            if (isExtraAbilityField == null)
+            {
+                Debug.LogError("WMITF_isExtraAbility field is null (SetIsExtraAbility_AddExtraAbility_Set). This should not be happening.");
+                return;
+            }
+
+            isExtraAbilityField.SetValue(ab, true);
         }
 
         [HarmonyPatch(typeof(CombatAbility), MethodType.Constructor, typeof(CombatAbility))]
@@ -42,17 +51,6 @@ namespace WMITF
 
             var origIsExtra = isExtraAbilityField.GetValue(toCopyAbility);
             isExtraAbilityField.SetValue(__instance, origIsExtra);
-        }
-
-        public static void SetIsExtraAbility_AddExtraAbility_Set(CombatAbility ab)
-        {
-            if(isExtraAbilityField == null)
-            {
-                Debug.LogError("WMITF_isExtraAbility field is null (SetIsExtraAbility_AddExtraAbility_Set). This should not be happening.");
-                return;
-            }
-
-            isExtraAbilityField.SetValue(ab, true);
         }
 
         public static bool IsFromExtraAbility(this CombatAbility ab)
