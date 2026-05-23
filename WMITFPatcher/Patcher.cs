@@ -57,33 +57,38 @@ namespace WMITFPatcher
             var abilitySO = module.GetType("AbilitySO");
 
             var assemblyStorage = wmitfModule.GetType("WMITF.ModAssemblyStorage");
+            var pluginFinder = wmitfModule.GetType("WMITF.PluginFinder");
 
-            var methods = new Dictionary<MethodDefinition, (string, string)>()
+            var methods = new Dictionary<MethodDefinition, (string asmbDictName, string pluginDictName, string mthd)>()
             {
-                [loadedAssetsHandler.FindMethod("AddExternalCharacter")]        = ("ModdedCharacterAssemblies",     "RegisterID"),
-                [loadedAssetsHandler.FindMethod("AddExternalEnemy")]            = ("ModdedEnemyAssemblies",         "RegisterID"),
-                [loadedAssetsHandler.FindMethod("TryAddExternalWearable")]      = ("ModdedWearableAssemblies",      "RegisterID"),
-                [achievementManager.FindMethod("TryAddModdedAchievement")]      = ("ModdedAchievementAssemblies",   "RegisterID_Achievement"),
-                [loadedAssetsHandler.FindMethod("AddExternalEnemyAbility")]     = ("ModdedAbilityAssemblies",       "RegisterID"),
-                [loadedAssetsHandler.FindMethod("AddExternalCharacterAbility")] = ("ModdedAbilityAssemblies",       "RegisterID"),
-                [abilitySO.FindMethod(".ctor")]                                 = ("ModdedAbilitySOAssemblies",     "RegisterAbilitySO"),
-                [statusFieldDB.FindMethod("AddNewStatusEffect")]                = ("ModdedStatusEffectAssemblies",  "RegisterID_StatusEffect"),
-                [statusFieldDB.FindMethod("AddNewFieldEffect")]                 = ("ModdedFieldEffectAssemblies",   "RegisterID_FieldEffect"),
+                [loadedAssetsHandler.FindMethod("AddExternalCharacter")]        = ("ModdedCharacterAssemblies",     "ModdedCharacterPlugins",       "RegisterID"),
+                [loadedAssetsHandler.FindMethod("AddExternalEnemy")]            = ("ModdedEnemyAssemblies",         "ModdedEnemyPlugins",           "RegisterID"),
+                [loadedAssetsHandler.FindMethod("TryAddExternalWearable")]      = ("ModdedWearableAssemblies",      "ModdedWearablePlugins",        "RegisterID"),
+                [achievementManager.FindMethod("TryAddModdedAchievement")]      = ("ModdedAchievementAssemblies",   "ModdedAchievementPlugins",     "RegisterID_Achievement"),
+                [loadedAssetsHandler.FindMethod("AddExternalEnemyAbility")]     = ("ModdedAbilityAssemblies",       "ModdedAbilityPlugins",         "RegisterID"),
+                [loadedAssetsHandler.FindMethod("AddExternalCharacterAbility")] = ("ModdedAbilityAssemblies",       "ModdedAbilityPlugins",         "RegisterID"),
+                [abilitySO.FindMethod(".ctor")]                                 = ("ModdedAbilitySOAssemblies",     null,                           "RegisterAbilitySO"),
+                [statusFieldDB.FindMethod("AddNewStatusEffect")]                = ("ModdedStatusEffectAssemblies",  "ModdedStatusEffectPlugins",    "RegisterID_StatusEffect"),
+                [statusFieldDB.FindMethod("AddNewFieldEffect")]                 = ("ModdedFieldEffectAssemblies",   "ModdedFieldEffectPlugins",     "RegisterID_FieldEffect"),
             };
 
             foreach (var kvp in methods)
             {
                 var mthd = kvp.Key;
-                var (dictName, registerMethodName) = kvp.Value;
+                var (asmbDictName, pluginDictName, registerMethodName) = kvp.Value;
 
-                var dictField = assemblyStorage.FindField(dictName);
-                var registerMethod = assemblyStorage.FindMethod(registerMethodName);
+                var asmbDictField   = string.IsNullOrEmpty(asmbDictName)    ? null : assemblyStorage.FindField(asmbDictName);
+                var pluginDictField = string.IsNullOrEmpty(pluginDictName)  ? null : pluginFinder.FindField(pluginDictName);
+                var registerMethod  = assemblyStorage.FindMethod(registerMethodName);
 
                 var crs = new ILCursor(new ILContext(mthd));
                 while(crs.TryGotoNext(MoveType.After, x => x.MatchRet())) { }
                 crs.Goto(crs.Prev, MoveType.Before);
 
-                crs.Emit(OpCodes.Ldsfld, module.ImportReference(dictField));
+                if(asmbDictField != null)
+                    crs.Emit(OpCodes.Ldsfld, module.ImportReference(asmbDictField));
+                if(pluginDictField != null)
+                    crs.Emit(OpCodes.Ldsfld, module.ImportReference(pluginDictField));
                 crs.Emit((mthd.IsStatic || mthd.Name == ".ctor") ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
                 crs.Emit(OpCodes.Call, module.ImportReference(registerMethod));
             }

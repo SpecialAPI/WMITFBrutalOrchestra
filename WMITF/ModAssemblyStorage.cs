@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BepInEx;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,44 +47,59 @@ namespace WMITF
                 return;
 
             dict[ab] = asmbl;
+            PluginFinder.TryRegisterNewAbilitySO(ab, asmbl);
         }
 
-        public static void RegisterID_StatusEffect(Dictionary<StatusEffectInfoSO, Assembly> dict, StatusEffect_SO se)
+        public static void RegisterID_StatusEffect(Dictionary<StatusEffectInfoSO, Assembly> dict, Dictionary<StatusEffectInfoSO, PluginInfo> plugins, StatusEffect_SO se)
         {
             var asmbl = GetModAssemblyFromStackTrace();
 
-            if (asmbl == null || dict == null || se == null || se.EffectInfo == null)
+            if (se == null || se.EffectInfo == null)
                 return;
 
-            dict[se.EffectInfo] = asmbl;
+            RegisterAssemly(se.EffectInfo, asmbl, dict, plugins);
         }
 
-        public static void RegisterID_FieldEffect(Dictionary<SlotStatusEffectInfoSO, Assembly> dict, FieldEffect_SO fe)
+        public static void RegisterID_FieldEffect(Dictionary<SlotStatusEffectInfoSO, Assembly> dict, Dictionary<SlotStatusEffectInfoSO, PluginInfo> plugins, FieldEffect_SO fe)
         {
             var asmbl = GetModAssemblyFromStackTrace();
 
-            if (asmbl == null || dict == null || fe == null || fe.EffectInfo == null)
+            if (fe == null || fe.EffectInfo == null)
                 return;
 
-            dict[fe.EffectInfo] = asmbl;
+            RegisterAssemly(fe.EffectInfo, asmbl, dict, plugins);
         }
 
-        public static void RegisterID_Achievement(Dictionary<string, Assembly> dict, ModdedAchievement_t ach)
+        public static void RegisterID_Achievement(Dictionary<string, Assembly> dict, Dictionary<string, PluginInfo> plugins, ModdedAchievement_t ach)
         {
-            RegisterID(dict, ach.m_eAchievementID);
+            if (ach == null)
+                return;
+
+            RegisterID(dict, plugins, ach.m_eAchievementID);
         }
 
-        public static void RegisterID(Dictionary<string, Assembly> dict, string id)
+        public static void RegisterID(Dictionary<string, Assembly> dict, Dictionary<string, PluginInfo> plugins, string id)
         {
             var asmbl = GetModAssemblyFromStackTrace();
 
-            if (asmbl == null || dict == null)
+            if (string.IsNullOrEmpty(id))
                 return;
 
-            dict[id] = asmbl;
+            RegisterAssemly(id, asmbl, dict, plugins);
         }
 
-        public static Assembly GetModAssemblyFromStackTraceOnlyCreateScriptableInstance()
+        private static void RegisterAssemly<TKey>(TKey key, Assembly assembly, Dictionary<TKey, Assembly> assemblies, Dictionary<TKey, PluginInfo> plugins)
+        {
+            if(assembly == null || key == null)
+                return;
+
+            if (assemblies != null)
+                assemblies[key] = assembly;
+            if (plugins != null)
+                PluginFinder.TryFindAndAddNewPlugin(key, assembly, plugins);
+        }
+
+        private static Assembly GetModAssemblyFromStackTraceOnlyCreateScriptableInstance()
         {
             var st = new StackTrace();
             var frames = st.GetFrames();
@@ -120,7 +136,7 @@ namespace WMITF
             return null;
         }
 
-        public static Assembly GetModAssemblyFromStackTrace()
+        private static Assembly GetModAssemblyFromStackTrace()
         {
             var st = new StackTrace();
             var frames = st.GetFrames();

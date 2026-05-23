@@ -20,49 +20,20 @@ namespace WMITF
         public static readonly Dictionary<StatusEffectInfoSO, PluginInfo> ModdedStatusEffectPlugins = [];
         public static readonly Dictionary<SlotStatusEffectInfoSO, PluginInfo> ModdedFieldEffectPlugins = [];
 
+        private static readonly Dictionary<AbilitySO, Assembly> NewAbilitySOAssemblies = [];
+        private static bool NewAbilitySOs = false;
+
+        public static bool Initialized = false;
+
         public static void Init()
         {
-            var pairs = new List<(Dictionary<string, Assembly> asmbls, Dictionary<string, PluginInfo> pinfos)>()
-            {
-                (ModAssemblyStorage.ModdedCharacterAssemblies,     ModdedCharacterPlugins),
-                (ModAssemblyStorage.ModdedEnemyAssemblies,         ModdedEnemyPlugins),
-                (ModAssemblyStorage.ModdedWearableAssemblies,      ModdedWearablePlugins),
-                (ModAssemblyStorage.ModdedAchievementAssemblies,   ModdedAchievementPlugins),
-                (ModAssemblyStorage.ModdedAbilityAssemblies,       ModdedAbilityPlugins)
-            };
-
-            foreach (var (asmbls, pinfos) in pairs)
-            {
-                foreach (var kvp in asmbls)
-                {
-                    var plugin = FindPluginWithAssembly(kvp.Value);
-
-                    if (plugin == null)
-                        continue;
-
-                    pinfos[kvp.Key] = plugin;
-                }
-            }
-
-            foreach (var kvp in ModAssemblyStorage.ModdedStatusEffectAssemblies)
-            {
-                var plugin = FindPluginWithAssembly(kvp.Value);
-
-                if (plugin == null)
-                    continue;
-
-                ModdedStatusEffectPlugins[kvp.Key] = plugin;
-            }
-
-            foreach (var kvp in ModAssemblyStorage.ModdedFieldEffectAssemblies)
-            {
-                var plugin = FindPluginWithAssembly(kvp.Value);
-
-                if (plugin == null)
-                    continue;
-
-                ModdedFieldEffectPlugins[kvp.Key] = plugin;
-            }
+            FindAndAddAllPlugins(ModAssemblyStorage.ModdedCharacterAssemblies,    ModdedCharacterPlugins);
+            FindAndAddAllPlugins(ModAssemblyStorage.ModdedEnemyAssemblies,        ModdedEnemyPlugins);
+            FindAndAddAllPlugins(ModAssemblyStorage.ModdedWearableAssemblies,     ModdedWearablePlugins);
+            FindAndAddAllPlugins(ModAssemblyStorage.ModdedAchievementAssemblies,  ModdedAchievementPlugins);
+            FindAndAddAllPlugins(ModAssemblyStorage.ModdedAbilityAssemblies,      ModdedAbilityPlugins);
+            FindAndAddAllPlugins(ModAssemblyStorage.ModdedStatusEffectAssemblies, ModdedStatusEffectPlugins);
+            FindAndAddAllPlugins(ModAssemblyStorage.ModdedFieldEffectAssemblies,  ModdedFieldEffectPlugins);
 
             foreach (var kvp in ModAssemblyStorage.ModdedAbilitySOAssemblies)
             {
@@ -76,16 +47,77 @@ namespace WMITF
                 if (string.IsNullOrEmpty(name) || ModdedAbilityPlugins.ContainsKey(name))
                     continue;
 
-                var plugin = FindPluginWithAssembly(kvp.Value);
+                var assembly = kvp.Value;
+                FindAndAddPlugin(name, assembly, ModdedAbilityPlugins);
+            }
 
-                if (plugin == null)
+            Initialized = true;
+        }
+
+        public static void ProcessNewAbilities()
+        {
+            if (!Initialized || !NewAbilitySOs)
+                return;
+
+            foreach(var kvp in NewAbilitySOAssemblies)
+            {
+                var ab = kvp.Key;
+
+                if (ab == null)
                     continue;
 
-                ModdedAbilityPlugins[name] = plugin;
+                var name = ab.name;
+
+                if (string.IsNullOrEmpty(name) || ModdedAbilityPlugins.ContainsKey(name))
+                    continue;
+
+                var assembly = kvp.Value;
+                FindAndAddPlugin(name, assembly, ModdedAbilityPlugins);
+            }
+
+            NewAbilitySOAssemblies.Clear();
+            NewAbilitySOs = false;
+        }
+
+        private static void FindAndAddAllPlugins<TKey>(Dictionary<TKey, Assembly> assemblies, Dictionary<TKey, PluginInfo> plugins)
+        {
+            foreach (var kvp in assemblies)
+            {
+                var key = kvp.Key;
+                var assembly = kvp.Value;
+
+                FindAndAddPlugin(key, assembly, plugins);
             }
         }
 
-        public static bool PluginIsIgnored(PluginInfo plugin)
+        private static void FindAndAddPlugin<TKey>(TKey key, Assembly assembly, Dictionary<TKey, PluginInfo> plugins)
+        {
+            var plugin = FindPluginWithAssembly(assembly);
+
+            if (plugin == null)
+                return;
+
+            plugins[key] = plugin;
+        }
+
+        public static void TryFindAndAddNewPlugin<TKey>(TKey key, Assembly assembly, Dictionary<TKey, PluginInfo> plugins)
+        {
+            if (!Initialized)
+                return;
+
+            FindAndAddPlugin(key, assembly, plugins);
+        }
+
+        public static void TryRegisterNewAbilitySO(AbilitySO ab, Assembly assembly)
+        {
+            if(!Initialized)
+                return;
+
+            NewAbilitySOAssemblies[ab] = assembly;
+            NewAbilitySOs = true;
+        }
+
+        private static bool PluginIsIgnored(PluginInfo plugin)
         {
             if (ModConfig.IgnoredMods == null)
                 return false;
@@ -94,6 +126,25 @@ namespace WMITF
                 return false;
 
             return true;
+        }
+
+        private static PluginInfo FindPluginWithAssembly(Assembly asmbl)
+        {
+            if (asmbl == null)
+                return null;
+
+            foreach (var pinfo in Chainloader.PluginInfos.Values)
+            {
+                if (pinfo == null || pinfo.Instance == null)
+                    continue;
+
+                if (pinfo.Instance.GetType().Assembly != asmbl)
+                    continue;
+
+                return pinfo;
+            }
+
+            return null;
         }
 
         public static bool TryGetCharacterModName(CharacterSO character, out string modName)
@@ -223,25 +274,6 @@ namespace WMITF
 
             modName = ModConfig.FormatModDisplay(plugin.Metadata.Name);
             return true;
-        }
-
-        public static PluginInfo FindPluginWithAssembly(Assembly asmbl)
-        {
-            if (asmbl == null)
-                return null;
-
-            foreach (var pinfo in Chainloader.PluginInfos.Values)
-            {
-                if (pinfo == null || pinfo.Instance == null)
-                    continue;
-
-                if (pinfo.Instance.GetType().Assembly != asmbl)
-                    continue;
-
-                return pinfo;
-            }
-
-            return null;
         }
     }
 }

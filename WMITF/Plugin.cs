@@ -25,5 +25,10 @@ namespace WMITF
             var harmony = new Harmony(GUID);
             harmony.PatchAll();
         }
+
+        public void Update()
+        {
+            PluginFinder.ProcessNewAbilities();
+        }
     }
 }
