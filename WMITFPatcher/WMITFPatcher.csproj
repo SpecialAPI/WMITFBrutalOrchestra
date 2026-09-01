@@ -2,8 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-      <LangVersion>latest</LangVersion>
-      <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	<LangVersion>13.0</LangVersion>
+	<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+
+	<!-- BO build script properties -->
+	<ModFolder>WMITF</ModFolder>
+	<ModInfoFolder>ModInfo</ModInfoFolder>
+	<ModDLLFolder>patchers</ModDLLFolder>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,5 +18,10 @@
       <IncludeAssets>compile</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="set &quot;outdir=$(OutDir)&quot;&#xD;&#xA;set &quot;assemblyname=$(AssemblyName)&quot;&#xD;&#xA;set &quot;modfolder=$(ModFolder)&quot;&#xD;&#xA;set &quot;modinfofolder=$(ModInfoFolder)&quot;&#xD;&#xA;set &quot;dllfolder=$(ModDLLFolder)&quot;&#xD;&#xA;call bobuild_win.bat" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+    <Exec Command="export OUTDIR=&quot;$(OutDir)&quot;&#xD;&#xA;export ASSEMBLYNAME=&quot;$(AssemblyName)&quot;&#xD;&#xA;export MODFOLDER=&quot;$(ModFolder)&quot;&#xD;&#xA;export MODINFOFOLDER=&quot;$(ModInfoFolder)&quot;&#xD;&#xA;export DLLFOLDER=&quot;$(ModDLLFolder)&quot;&#xD;&#xA;./bobuild_lin.sh" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+  </Target>
 
 </Project>
