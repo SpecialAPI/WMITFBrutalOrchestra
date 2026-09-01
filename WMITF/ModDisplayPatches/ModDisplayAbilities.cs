@@ -60,6 +60,9 @@ namespace WMITF.ModDisplayPatches
             if (!PluginFinder.TryGetAbilityModName(ab, out var modName))
                 return orig;
 
+            if (!string.IsNullOrEmpty(orig))
+                orig += "\n";
+
             return $"{orig}<size=34px>{modName}</size>";
         }
     }
